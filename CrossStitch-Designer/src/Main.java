@@ -18,6 +18,7 @@ public class Main {
 		frame.getContentPane().add(placeholder);
 		frame.pack();*/
 		frame.setLocationRelativeTo(null);
+		//need to add a JLayeredPane !!!!!!!!!!!!!!!!!!!
 		CanvasPanel cPanel = new CanvasPanel();
 		
 		//frame.getContentPane().add(new JScrollPane(cPanel), BorderLayout.CENTER);

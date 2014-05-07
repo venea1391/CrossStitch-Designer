@@ -1,3 +1,6 @@
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.awt.image.PixelGrabber;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -40,6 +43,25 @@ public class SquareCanvas {
 			
 			for (int j=0; j<x; j++){
 				row.put(new Integer(j), new Square(i, j));
+			}
+			canvas.put(new Integer(i), row);
+		}
+		return instance;
+	}
+	public static SquareCanvas createSquareCanvas(BufferedImage img){
+		instance = new SquareCanvas();
+		instance.height = img.getHeight();
+		instance.width = img.getWidth();
+		HashMap<Integer, Square> row;
+		Square s;
+		canvas = new HashMap<Integer, HashMap<Integer, Square>>();
+		for (int i=0; i<instance.height; i++){
+			row = new HashMap<Integer, Square>();
+			
+			for (int j=0; j<instance.width; j++){
+				Color color = new Color(img.getRGB(j, i));
+				s = new Square(color, i, j);
+				row.put(new Integer(j), s);
 			}
 			canvas.put(new Integer(i), row);
 		}

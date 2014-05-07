@@ -4,9 +4,11 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -39,6 +41,9 @@ public class StartOptionsDialog extends JDialog implements ActionListener {
 		dispose(); 
 		if (e.getSource()==button1) {
 			//TODO
+			//Create a file chooser
+			Controller.importImage(parent);
+			
 		}
 		if (e.getSource()==button2) {
 			JDialog dimsDialog = new DimsDialog(parent);

@@ -11,7 +11,7 @@ public class Square {
 	}
 	
 	public Square(int row, int col){
-		this(Color.white, row, col);
+		this(null, row, col);
 	}
 	
 	public Square(Color c, int row, int col){
@@ -26,8 +26,10 @@ public class Square {
 		g.setColor(Color.black);
 		g.drawLine(col*EDGE, row*EDGE, EDGE+(col*EDGE), row*EDGE);
 		g.drawLine(col*EDGE, row*EDGE, col*EDGE, EDGE+(row*EDGE));
-		g.setColor(color);
-		g.fillRect(col*EDGE+1, row*EDGE+1, EDGE-1, EDGE-1);
+		if (color!=null){
+			g.setColor(color);
+			g.fillRect(col*EDGE+1, row*EDGE+1, EDGE-1, EDGE-1);
+		}
 	}
 	
 }
