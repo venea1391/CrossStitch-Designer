@@ -1,0 +1,19 @@
+Types:
+straight: vertical and horizontal
+single diagonal: 2 variations
+double diagonal: 4 variations
+
+On a grid of squares 20x20 px
+snap to grid
+either draw lines on grid with cursor, program guesses based on start and end point, or, choose which line type you want and click on grid
+zoom in/out on grid
+be able to export backstitch layer as png separate from squares
+choose colors for lines
+import image, map each pixel to 20x20 square
+be able to erase/undo!
+
+
+Start with prompt for dimensions in squares
+create canvas
+create appropriate number of squares (21x21, black single pixel line on bottom and right, draw canvas)
+
