@@ -10,8 +10,13 @@ public class CanvasPanel extends JPanel {
 	private SquareCanvas sc;
 	
 	public CanvasPanel(){
-		setSize(800, 600);
+		//setSize(800, 600);
 	}
+	
+	@Override
+    public Dimension getPreferredSize() {
+        return new Dimension(Controller.getWidth()*Square.EDGE, Controller.getHeight()*Square.EDGE);
+    }
 
 
     public void paintComponent(Graphics g) {
@@ -38,3 +43,4 @@ public class CanvasPanel extends JPanel {
     	
     }
 }
+

@@ -19,8 +19,8 @@ public class SquareCanvas {
 		}
 		else {
 			System.out.println("oops no canvas created");
-			instance = new SquareCanvas();
-			return instance;
+			//instance = new SquareCanvas();
+			return null;
 		}
 	}
 	
@@ -30,14 +30,16 @@ public class SquareCanvas {
 	
 	public static SquareCanvas createSquareCanvas(int x, int y){
 		instance = new SquareCanvas();
-		Square s;
+		instance.height = y;
+		instance.width = x;
+
 		HashMap<Integer, Square> row;
 		canvas = new HashMap<Integer, HashMap<Integer, Square>>();
 		for (int i=0; i<y; i++){
 			row = new HashMap<Integer, Square>();
 			
 			for (int j=0; j<x; j++){
-				row.put(new Integer(j), new Square(j, i));
+				row.put(new Integer(j), new Square(i, j));
 			}
 			canvas.put(new Integer(i), row);
 		}

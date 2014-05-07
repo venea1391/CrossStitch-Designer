@@ -19,12 +19,6 @@ public class StartOptionsDialog extends JDialog implements ActionListener {
 	public StartOptionsDialog(JFrame parent) {
 		super(parent, "Get started", true);
 		this.parent = parent;
-		/*if (parent != null) {
-			Dimension parentSize = parent.getSize(); 
-		    Point p = parent.getLocation(); 
-		    setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
-		}*/
-		setLocationRelativeTo(null);
 		JPanel buttonPane = new JPanel();
 		buttonPane.setLayout(new GridLayout(2, 1));
 		button1 = new JButton("Import image");
@@ -36,6 +30,7 @@ public class StartOptionsDialog extends JDialog implements ActionListener {
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		pack(); 
+		setLocationRelativeTo(parent);
 		setVisible(true);
 		return;
 	}

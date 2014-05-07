@@ -30,7 +30,7 @@ public class DimsDialog extends JDialog implements ActionListener {
 		    Point p = parent.getLocation(); 
 		    setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
 		}*/
-		setLocationRelativeTo(null);
+		
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -62,6 +62,7 @@ public class DimsDialog extends JDialog implements ActionListener {
 		//getContentPane().add(ok);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		pack(); 
+		setLocationRelativeTo(parent);
 		setVisible(true);
 		return;
 	}
@@ -70,10 +71,7 @@ public class DimsDialog extends JDialog implements ActionListener {
 		//get input from text fields, verify
 		int h = Integer.parseInt(height.getText());
 		int w = Integer.parseInt(width.getText());
-		Controller.setHeight(h);
-		Controller.setWidth(w);
-		Controller.setSquareCanvas(SquareCanvas.createSquareCanvas(w, h));
-		Controller.updateCanvasPanel();
+		Controller.initializeSquareCanvas(h, w);
 		
 		setVisible(false); 
 		dispose(); 

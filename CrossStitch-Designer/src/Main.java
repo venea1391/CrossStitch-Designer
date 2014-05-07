@@ -19,8 +19,18 @@ public class Main {
 		frame.pack();*/
 		frame.setLocationRelativeTo(null);
 		CanvasPanel cPanel = new CanvasPanel();
-		frame.add(cPanel);
+		
+		//frame.getContentPane().add(new JScrollPane(cPanel), BorderLayout.CENTER);
+
+		//frame.add(cPanel);
+	    //JScrollPane scrollPane = new JScrollPane(new CanvasPanelHost(cPanel));
+	    //frame.add(new JScrollPane(cPanel), BorderLayout.CENTER);
+	 // Add the listbox to a scrolling pane
+	 		JScrollPane scrollPanel = new JScrollPane();
+	 		scrollPanel.getViewport().add( cPanel );
+	 		frame.add( scrollPanel, BorderLayout.CENTER );
 		Controller.setCanvasPanel(cPanel);
+		Controller.setScrollPanel(scrollPanel);
 		//frame.pack();
 		
 		frame.setVisible(true);

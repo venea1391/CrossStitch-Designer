@@ -4,30 +4,30 @@ import java.awt.*;
 public class Square {
 	public final static int EDGE = 21;
 	private Color color;
-	private int x, y;
+	private int col, row;
 	
 	public Square(Color c){
 		this(c, -1, -1);
 	}
 	
-	public Square(int x, int y){
-		this(Color.white, x, y);
+	public Square(int row, int col){
+		this(Color.white, row, col);
 	}
 	
-	public Square(Color c, int x, int y){
+	public Square(Color c, int row, int col){
 		this.color = c;
-		this.x = x;
-		this.y = y;
+		this.col = col;
+		this.row = row;
 	}
 	
 	public void draw(Graphics g){
 		//must have coordinates
 		//coordinates per pixel/square
 		g.setColor(Color.black);
-		g.drawLine(x*EDGE, y*EDGE, EDGE+(x*EDGE), y*EDGE);
-		g.drawLine(x*EDGE, y*EDGE, x*EDGE, EDGE+(y*EDGE));
+		g.drawLine(col*EDGE, row*EDGE, EDGE+(col*EDGE), row*EDGE);
+		g.drawLine(col*EDGE, row*EDGE, col*EDGE, EDGE+(row*EDGE));
 		g.setColor(color);
-		g.drawRect(x*EDGE+1, y*EDGE+1, EDGE-1, EDGE-1);
+		g.fillRect(col*EDGE+1, row*EDGE+1, EDGE-1, EDGE-1);
 	}
 	
 }
