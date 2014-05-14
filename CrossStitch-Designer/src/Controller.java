@@ -1,5 +1,10 @@
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +20,7 @@ public class Controller {
 	private static CanvasPanel canvasPanel;
 	private static JScrollPane scrollPanel;
 	private static SquareCanvas sqCanvas;
+	private static ToolbarPanel toolbarPanel;
 	private static Graphics g;
 	//custom path
 	static final JFileChooser fc = new JFileChooser("/Volumes/Macintosh HDD/HDD desktop/crafts/cross stitch");
@@ -45,6 +51,10 @@ public class Controller {
 		sqCanvas = sc;
 	}
 	
+	public static void setToolbarPanel(ToolbarPanel tp){
+		toolbarPanel = tp;
+	}
+	
 	public static SquareCanvas getSquareCanvas(){
 		return sqCanvas;
 	}
@@ -53,6 +63,48 @@ public class Controller {
 		canvasPanel.repaint();
 	}
 	
+	public static void start(){
+		JFrame frame = new JFrame("CrossStitch Designer");
+		frame.setSize(800, 600);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setLocationRelativeTo(null);
+		//need to add a JLayeredPane !!!!!!!!!!!!!!!!!!!
+		frame.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		ToolbarPanel toolbarPanel = new ToolbarPanel();
+		c.insets = new Insets(0,0,0,0);
+		c.ipadx = 0;
+		c.ipady = 0;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 1.0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weighty = 0;
+		frame.add(toolbarPanel, c);
+		CanvasPanel cPanel = new CanvasPanel();
+	 	JScrollPane scrollPanel = new JScrollPane();
+	 	scrollPanel.setSize(new Dimension(800, 600-32));
+	 	scrollPanel.getViewport().add( cPanel );
+	 	c.gridy = 1;
+	 	c.weighty = 1.0;
+	 	//c.ipady = 600-32;
+	 	//c.ipadx = 800-20;
+	 	c.fill = GridBagConstraints.BOTH;
+	 	//c.weightx = 1.0;
+	 	//CAN'T VIEW THE SCROLL PANEL
+	 	frame.add(scrollPanel, c);
+		setCanvasPanel(cPanel);
+		setScrollPanel(scrollPanel);
+		setToolbarPanel(toolbarPanel);
+		
+		frame.setVisible(true);
+		new StartOptionsDialog(frame);
+		
+	}
+	
+	public static void enableToolbar(){
+		toolbarPanel.enableAllIcons();
+	}
 	public static void initializeSquareCanvas(int h, int w){
 		setHeight(h);
 		setWidth(w);
@@ -77,6 +129,7 @@ public class Controller {
                 updateCanvasPanel();
                 scrollPanel.revalidate();
         		scrollPanel.repaint();
+        		Controller.enableToolbar();
             } catch (IOException e) {
             	System.out.println("well, shit");
             }

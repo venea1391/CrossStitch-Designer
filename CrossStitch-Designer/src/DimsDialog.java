@@ -75,6 +75,7 @@ public class DimsDialog extends JDialog implements ActionListener {
 		
 		setVisible(false); 
 		dispose(); 
+		Controller.enableToolbar();
 
 	}
 }
