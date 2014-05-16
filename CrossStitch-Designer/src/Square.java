@@ -2,7 +2,7 @@ import java.awt.*;
 
 
 public class Square {
-	public final static int EDGE = 20;
+	public static int EDGE = 20;
 	private Color color;
 	private int col, row;
 	

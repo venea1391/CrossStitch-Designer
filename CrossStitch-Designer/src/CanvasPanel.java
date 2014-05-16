@@ -21,6 +21,7 @@ public class CanvasPanel extends JPanel {
 
     public void paintComponent(Graphics g) {
     	HashMap<Integer, HashMap<Integer, Square>> sc = SquareCanvas.getCanvas();
+    	System.out.println("painting canvas panel");
         super.paintComponent(g);       
         // Draw Text
         //g.drawString("This is my custom Panel!",10,20);
@@ -33,6 +34,7 @@ public class CanvasPanel extends JPanel {
         		}
         	}
         }
+        Controller.repaintBSPanel();
     }  
     
     public void updateCanvas(){

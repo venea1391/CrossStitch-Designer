@@ -12,6 +12,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLayeredPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 
@@ -21,6 +23,8 @@ public class Controller {
 	private static JScrollPane scrollPanel;
 	private static SquareCanvas sqCanvas;
 	private static ToolbarPanel toolbarPanel;
+	private static BackStitchPanel bsPanel;
+	private static JLayeredPane designArea;
 	private static Graphics g;
 	//custom path
 	static final JFileChooser fc = new JFileChooser("/Volumes/Macintosh HDD/HDD desktop/crafts/cross stitch");
@@ -55,12 +59,23 @@ public class Controller {
 		toolbarPanel = tp;
 	}
 	
+	public static void setBackStitchPanel(BackStitchPanel bsp){
+		bsPanel = bsp;
+	}
+	public static void setDesignArea(JLayeredPane da){
+		designArea = da;
+	}
+	
 	public static SquareCanvas getSquareCanvas(){
 		return sqCanvas;
 	}
 	
-	public static void updateCanvasPanel(){
+	public static void updateDesignArea(){
 		canvasPanel.repaint();
+	}
+	
+	public static void repaintBSPanel(){
+		bsPanel.repaint();
 	}
 	
 	public static void start(){
@@ -81,23 +96,45 @@ public class Controller {
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weighty = 0;
 		frame.add(toolbarPanel, c);
+		
 		CanvasPanel cPanel = new CanvasPanel();
+		BackStitchPanel bsPanel = new BackStitchPanel();
+		final JPanel glass = (JPanel) frame.getGlassPane();
+
+		    glass.setVisible(true);
+		    glass.add(bsPanel);
+		    //this glass thing doesn't work
+
+		
+		/*JPanel designPanel = new JPanel();
+		GridBagConstraints spc = new GridBagConstraints();
+	 	spc.gridx = 0;
+	 	spc.gridy = 0;
+	 	spc.fill = GridBagConstraints.BOTH;
+	 	designPanel.add(cPanel, spc);
+	 	designPanel.add(bsPanel, spc);
+		designPanel.setLayout(new GridBagLayout());*/
+		
 	 	JScrollPane scrollPanel = new JScrollPane();
 	 	scrollPanel.setSize(new Dimension(800, 600-32));
-	 	scrollPanel.getViewport().add( cPanel );
+	 	
+	 	scrollPanel.getViewport().add(cPanel); //not designPanel
+	 	//scrollPanel.getViewport().add(bsPanel);
+	 	
+	 	
+	 	
 	 	c.gridy = 1;
 	 	c.weighty = 1.0;
-	 	//c.ipady = 600-32;
-	 	//c.ipadx = 800-20;
 	 	c.fill = GridBagConstraints.BOTH;
-	 	//c.weightx = 1.0;
-	 	//CAN'T VIEW THE SCROLL PANEL
-	 	frame.add(scrollPanel, c);
+	 	//frame.add(cPanel, c);
+	 	//frame.add(bsPanel, c);
+	 	frame.add(scrollPanel,c);
 		setCanvasPanel(cPanel);
 		setScrollPanel(scrollPanel);
 		setToolbarPanel(toolbarPanel);
-		
+		setBackStitchPanel(bsPanel);
 		frame.setVisible(true);
+		frame.repaint();
 		new StartOptionsDialog(frame);
 		
 	}
@@ -109,10 +146,13 @@ public class Controller {
 		setHeight(h);
 		setWidth(w);
 		setSquareCanvas(SquareCanvas.createSquareCanvas(w, h));
-		updateCanvasPanel();
+		updateDesignArea();
+		System.out.println();
+		bsPanel.repaint();
 		//canvasPanel.setSize(w*Square.EDGE, h*Square.EDGE);
 		scrollPanel.revalidate();
 		scrollPanel.repaint();
+		
 	}
 	
 	public static void importImage(JFrame parent){
@@ -126,9 +166,10 @@ public class Controller {
                 SquareCanvas.createSquareCanvas(img);
                 setHeight(img.getHeight());
         		setWidth(img.getWidth());
-                updateCanvasPanel();
+                updateDesignArea();
                 scrollPanel.revalidate();
         		scrollPanel.repaint();
+        		bsPanel.repaint();
         		Controller.enableToolbar();
             } catch (IOException e) {
             	System.out.println("well, shit");
@@ -136,5 +177,31 @@ public class Controller {
         } else {
             //log.append("Open command cancelled by user." + newline);
         }
+	}
+	
+	public static void zoomIn(){
+		if (Square.EDGE == 2){
+			Square.EDGE = 5;
+		}
+		else if (Square.EDGE < 40){
+			Square.EDGE = Square.EDGE+5;
+			scrollPanel.repaint();
+		}
+		else {
+			//do nothing
+		}
+	}
+	public static void zoomOut(){
+		if (Square.EDGE > 5){
+			Square.EDGE = Square.EDGE-5;
+			scrollPanel.repaint();
+		}
+		else if (Square.EDGE == 5){
+			Square.EDGE = 3;
+			scrollPanel.repaint();
+		}
+		else {
+			//do nothing
+		}
 	}
 }
