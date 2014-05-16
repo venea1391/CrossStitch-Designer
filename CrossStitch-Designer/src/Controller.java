@@ -5,6 +5,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +26,6 @@ public class Controller {
 	private static ToolbarPanel toolbarPanel;
 	private static BackStitchPanel bsPanel;
 	private static JLayeredPane designArea;
-	private static Graphics g;
 	//custom path
 	static final JFileChooser fc = new JFileChooser("/Volumes/Macintosh HDD/HDD desktop/crafts/cross stitch");
 	
@@ -71,7 +71,11 @@ public class Controller {
 	}
 	
 	public static void updateDesignArea(){
-		canvasPanel.repaint();
+		//canvasPanel.repaint();
+		canvasPanel.setSize(new Dimension(width*Square.EDGE, height*Square.EDGE));
+		bsPanel.setSize(new Dimension(width*Square.EDGE, height*Square.EDGE));
+		designArea.setSize(new Dimension(width*Square.EDGE, height*Square.EDGE));
+		designArea.setPreferredSize(new Dimension(width*Square.EDGE, height*Square.EDGE));
 	}
 	
 	public static void repaintBSPanel(){
@@ -79,11 +83,12 @@ public class Controller {
 	}
 	
 	public static void start(){
+        
 		JFrame frame = new JFrame("CrossStitch Designer");
 		frame.setSize(800, 600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
-		//need to add a JLayeredPane !!!!!!!!!!!!!!!!!!!
+
 		frame.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		ToolbarPanel toolbarPanel = new ToolbarPanel();
@@ -99,42 +104,25 @@ public class Controller {
 		
 		CanvasPanel cPanel = new CanvasPanel();
 		BackStitchPanel bsPanel = new BackStitchPanel();
-		final JPanel glass = (JPanel) frame.getGlassPane();
+		JLayeredPane designArea = new JLayeredPane();
+		designArea.add(cPanel, new Integer(0), 0);
+		designArea.add(bsPanel, new Integer(1), 0);
 
-		    glass.setVisible(true);
-		    glass.add(bsPanel);
-		    //this glass thing doesn't work
-
-		
-		/*JPanel designPanel = new JPanel();
-		GridBagConstraints spc = new GridBagConstraints();
-	 	spc.gridx = 0;
-	 	spc.gridy = 0;
-	 	spc.fill = GridBagConstraints.BOTH;
-	 	designPanel.add(cPanel, spc);
-	 	designPanel.add(bsPanel, spc);
-		designPanel.setLayout(new GridBagLayout());*/
-		
 	 	JScrollPane scrollPanel = new JScrollPane();
 	 	scrollPanel.setSize(new Dimension(800, 600-32));
-	 	
-	 	scrollPanel.getViewport().add(cPanel); //not designPanel
-	 	//scrollPanel.getViewport().add(bsPanel);
-	 	
-	 	
-	 	
+	 	scrollPanel.getViewport().add(designArea);
+
 	 	c.gridy = 1;
 	 	c.weighty = 1.0;
 	 	c.fill = GridBagConstraints.BOTH;
-	 	//frame.add(cPanel, c);
-	 	//frame.add(bsPanel, c);
-	 	frame.add(scrollPanel,c);
+	 	frame.add(scrollPanel, c);
+
 		setCanvasPanel(cPanel);
 		setScrollPanel(scrollPanel);
 		setToolbarPanel(toolbarPanel);
 		setBackStitchPanel(bsPanel);
+		setDesignArea(designArea);
 		frame.setVisible(true);
-		frame.repaint();
 		new StartOptionsDialog(frame);
 		
 	}
@@ -147,9 +135,7 @@ public class Controller {
 		setWidth(w);
 		setSquareCanvas(SquareCanvas.createSquareCanvas(w, h));
 		updateDesignArea();
-		System.out.println();
-		bsPanel.repaint();
-		//canvasPanel.setSize(w*Square.EDGE, h*Square.EDGE);
+		System.out.println("new blank canvas");
 		scrollPanel.revalidate();
 		scrollPanel.repaint();
 		
@@ -169,7 +155,7 @@ public class Controller {
                 updateDesignArea();
                 scrollPanel.revalidate();
         		scrollPanel.repaint();
-        		bsPanel.repaint();
+        		//bsPanel.repaint();
         		Controller.enableToolbar();
             } catch (IOException e) {
             	System.out.println("well, shit");
@@ -182,9 +168,14 @@ public class Controller {
 	public static void zoomIn(){
 		if (Square.EDGE == 2){
 			Square.EDGE = 5;
+			updateDesignArea();
+			scrollPanel.revalidate();
+			scrollPanel.repaint();
 		}
 		else if (Square.EDGE < 40){
 			Square.EDGE = Square.EDGE+5;
+			updateDesignArea();
+			scrollPanel.revalidate();
 			scrollPanel.repaint();
 		}
 		else {
@@ -194,10 +185,14 @@ public class Controller {
 	public static void zoomOut(){
 		if (Square.EDGE > 5){
 			Square.EDGE = Square.EDGE-5;
+			updateDesignArea();
+			scrollPanel.revalidate();
 			scrollPanel.repaint();
 		}
 		else if (Square.EDGE == 5){
 			Square.EDGE = 3;
+			updateDesignArea();
+			scrollPanel.revalidate();
 			scrollPanel.repaint();
 		}
 		else {

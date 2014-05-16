@@ -8,9 +8,11 @@ import javax.swing.*;
 public class BackStitchPanel extends JPanel {
 	
 	public BackStitchPanel(){
-		//setOpaque(false);
+		setOpaque(false);
 		System.out.println("constructing bsPanel");
+		setSize(800, 600);
 		setBackground(new Color(0,0,0,64));
+		
 	}
 	
     public Dimension getPreferredSize() {
@@ -21,7 +23,7 @@ public class BackStitchPanel extends JPanel {
         super.paintComponent(g);
         System.out.println("painting backstitch layer");
         // Draw Text
-        g.setColor(new Color(0, 0, 0, 128));
+        g.setColor(new Color(0, 255, 0));
         g.fillRect(0, 0, 50, 50);
     } 
 }
