@@ -47,6 +47,9 @@ public class ToolbarPanel extends JPanel {
 		_zoom_out.addActionListener(new ActionListener(){
 		    public void actionPerformed(ActionEvent evt){Controller.zoomOut();}
 		});
+		_backstitch.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){Controller.changeBackstitchMode();}
+		});
 		
 		icon_buttons[0] = _new;
 		icon_buttons[1] = _open;

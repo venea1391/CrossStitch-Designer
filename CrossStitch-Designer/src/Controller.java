@@ -26,6 +26,7 @@ public class Controller {
 	private static ToolbarPanel toolbarPanel;
 	private static BackStitchPanel bsPanel;
 	private static JLayeredPane designArea;
+	private static boolean backstitchMode = false;
 	//custom path
 	static final JFileChooser fc = new JFileChooser("/Volumes/Macintosh HDD/HDD desktop/crafts/cross stitch");
 	
@@ -64,6 +65,13 @@ public class Controller {
 	}
 	public static void setDesignArea(JLayeredPane da){
 		designArea = da;
+	}
+	
+	public static void setBackstitchMode(boolean b){
+		backstitchMode = b;
+	}
+	public static boolean getBackstitchMode(){
+		return backstitchMode;
 	}
 	
 	public static SquareCanvas getSquareCanvas(){
@@ -135,6 +143,7 @@ public class Controller {
 		setWidth(w);
 		setSquareCanvas(SquareCanvas.createSquareCanvas(w, h));
 		updateDesignArea();
+		bsPanel.createBI();
 		System.out.println("new blank canvas");
 		scrollPanel.revalidate();
 		scrollPanel.repaint();
@@ -153,6 +162,7 @@ public class Controller {
                 setHeight(img.getHeight());
         		setWidth(img.getWidth());
                 updateDesignArea();
+                bsPanel.createBI();
                 scrollPanel.revalidate();
         		scrollPanel.repaint();
         		//bsPanel.repaint();
@@ -169,12 +179,14 @@ public class Controller {
 		if (Square.EDGE == 2){
 			Square.EDGE = 5;
 			updateDesignArea();
+			bsPanel.scaleBI();
 			scrollPanel.revalidate();
 			scrollPanel.repaint();
 		}
 		else if (Square.EDGE < 40){
 			Square.EDGE = Square.EDGE+5;
 			updateDesignArea();
+			bsPanel.scaleBI();
 			scrollPanel.revalidate();
 			scrollPanel.repaint();
 		}
@@ -186,12 +198,14 @@ public class Controller {
 		if (Square.EDGE > 5){
 			Square.EDGE = Square.EDGE-5;
 			updateDesignArea();
+			bsPanel.scaleBI();
 			scrollPanel.revalidate();
 			scrollPanel.repaint();
 		}
 		else if (Square.EDGE == 5){
 			Square.EDGE = 3;
 			updateDesignArea();
+			bsPanel.scaleBI();
 			scrollPanel.revalidate();
 			scrollPanel.repaint();
 		}
@@ -199,4 +213,11 @@ public class Controller {
 			//do nothing
 		}
 	}
+	
+	public static void changeBackstitchMode(){
+		System.out.println(backstitchMode);
+		backstitchMode = backstitchMode ? false : true;
+		System.out.println(backstitchMode);
+	}
+	
 }
