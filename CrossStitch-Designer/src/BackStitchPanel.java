@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
@@ -17,6 +18,8 @@ public class BackStitchPanel extends JPanel {
 	private BufferedImage img;
 	private Graphics2D big;
 	private ArrayList<Line> lines = new ArrayList<Line>();
+	private Stack<Line> lineStack = new Stack<Line>();  //stack should be reset every time
+								// we enter backstitch mode, maybe should live in Controller
 	
 	public BackStitchPanel(){
 		setOpaque(false);
@@ -44,7 +47,7 @@ public class BackStitchPanel extends JPanel {
 	            			(int) startPoint.getY()*Square.EDGE, 
 	            			(int) endPoint.getX()*Square.EDGE, 
 	            			(int) endPoint.getY()*Square.EDGE);
-	            	lines.add(new Line(startPoint, endPoint));
+	            	breakupLine(startPoint, endPoint);
 	            	repaint();
 	            }
 	        }
@@ -72,10 +75,6 @@ public class BackStitchPanel extends JPanel {
 	public void paintComponent(Graphics g) {
         super.paintComponent(g);
         System.out.println("painting backstitch layer");
-        // Draw Text
-        g.setColor(new Color(0, 255, 0));
-        g.fillRect(0, 0, 50, 50);
-        //fix size of img
         Graphics2D g2d = (Graphics2D) g;
 		if (img!=null) {
 			System.out.println(img.getWidth());
@@ -112,5 +111,186 @@ public class BackStitchPanel extends JPanel {
 		}
 		img = newImg;
 		big = grr;
+	}
+	
+	public void breakupLine(Point start, Point end){
+		ArrayList<Line> broken = new ArrayList<Line>();
+		int spanX, spanY, x1, y1, x2, y2;
+		x1 = (int) start.getX();
+		y1 = (int) start.getY();
+		x2 = (int) end.getX();
+		y2 = (int) end.getY();
+		//point
+		if (x1==x2 && y1==y2){ 
+			broken.add(new Line(start, end));
+		}
+		//straight horizontal
+		else if (y1==y2){ 
+			spanX = x1 - x2;
+			int x = x1;
+			while (spanX!=0){
+				if (spanX > 0){
+					broken.add(new Line(new Point(x, y1), 
+							new Point(x-1, y1)));
+					x--;
+					spanX--;
+				}
+				else {//span X < 0
+					broken.add(new Line(new Point(x, y1), 
+							new Point(x+1, y1)));
+					x++;
+					spanX++;
+				}
+			}
+		}
+		//straight vertical
+		else if (x1==x2){ 
+			spanY = y1 - y2;
+			int y = y1;
+			while (spanY!=0){
+				if (spanY > 0){
+					broken.add(new Line(new Point(x1, y), 
+							new Point(x1, y-1)));
+					y--;
+					spanY--;
+				}
+				else {//span X < 0
+					broken.add(new Line(new Point(x1, y), 
+							new Point(x1, y+1)));
+					y++;
+					spanY++;
+				}
+			}
+		}
+		//1:1 diagonal
+		else if (Math.abs(x1-x2)==Math.abs(y1-y2)){
+			spanX = x1-x2;
+			spanY = y1-y2;
+			int y = y1;
+			int x = x1;
+			while ((spanX != 0)&&(spanY != 0)){
+				if ((spanX > 0)&&(spanY > 0)){
+					broken.add(new Line(new Point(x-1, y-1), 
+							new Point(x, y)));
+					y--;
+					spanY--;
+					x--;
+					spanX--;
+				}
+				else if ((spanX < 0)&&(spanY < 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x+1, y+1)));
+					y++;
+					spanY++;
+					x++;
+					spanX++;
+				}
+				else if ((spanX > 0)&&(spanY < 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x-1, y+1)));
+					y++;
+					spanY++;
+					x--;
+					spanX--;
+				}
+				else {  // if ((spanX < 0)&&(spanY > 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x+1, y-1)));
+					y--;
+					spanY--;
+					x++;
+					spanX++;
+				}
+
+			}
+		}
+		//tall diagonal, 1x:2y
+		else if ((2*Math.abs(x1-x2))==(Math.abs(y1-y2))){
+			spanX = x1-x2;
+			spanY = y1-y2;
+			int y = y1;
+			int x = x1;
+			while ((spanX != 0)&&(spanY != 0)){
+				if ((spanX > 0)&&(spanY > 0)){
+					broken.add(new Line(new Point(x-1, y-2), 
+							new Point(x, y)));
+					y = y-2;
+					spanY = spanY-2;
+					x--;
+					spanX--;
+				}
+				else if ((spanX < 0)&&(spanY < 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x+1, y+2)));
+					y = y+2;
+					spanY = spanY+2;
+					x++;
+					spanX++;
+				}
+				else if ((spanX > 0)&&(spanY < 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x-1, y+2)));
+					y = y+2;
+					spanY = spanY+2;
+					x--;
+					spanX--;
+				}
+				else {  // if ((spanX < 0)&&(spanY > 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x+1, y-2)));
+					y = y-2;
+					spanY = spanY-2;
+					x++;
+					spanX++;
+				}
+
+			}
+		}
+		//wide diagonal, 2x:1y
+		else if (Math.abs(x1-x2)==(2*Math.abs(y1-y2))){
+			spanX = x1-x2;
+			spanY = y1-y2;
+			int y = y1;
+			int x = x1;
+			while ((spanX != 0)&&(spanY != 0)){
+				if ((spanX > 0)&&(spanY > 0)){
+					broken.add(new Line(new Point(x-2, y-1), 
+							new Point(x, y)));
+					y--;
+					spanY--;
+					x = x-2;
+					spanX = spanX-2;
+				}
+				else if ((spanX < 0)&&(spanY < 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x+2, y+1)));
+					y++;
+					spanY++;
+					x = x+2;
+					spanX = spanX+2;
+				}
+				else if ((spanX > 0)&&(spanY < 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x-2, y+1)));
+					y++;
+					spanY++;
+					x = x-2;
+					spanX = spanX-2;
+				}
+				else {  // if ((spanX < 0)&&(spanY > 0)){
+					broken.add(new Line(new Point(x, y), 
+							new Point(x+2, y-1)));
+					y--;
+					spanY--;
+					x = x+2;
+					spanX = spanX+2;
+				}
+
+			}
+		}
+		for (Line l : broken){
+			lines.add(l);
+			lineStack.add(l); //for undo operations
+		}
 	}
 }
