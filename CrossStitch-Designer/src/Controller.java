@@ -27,6 +27,8 @@ public class Controller {
 	private static BackStitchPanel bsPanel;
 	private static JLayeredPane designArea;
 	private static boolean backstitchMode = false;
+	public enum Mode {NONE, BACKSTITCH, ERASE};
+	private static Mode currentMode = Mode.NONE;
 	//custom path
 	static final JFileChooser fc = new JFileChooser("/Volumes/Macintosh HDD/HDD desktop/crafts/cross stitch");
 	
@@ -67,11 +69,36 @@ public class Controller {
 		designArea = da;
 	}
 	
-	public static void setBackstitchMode(boolean b){
-		backstitchMode = b;
+	public static void setMode(Mode m){
+		if (m==Mode.BACKSTITCH){
+			if (currentMode==Mode.BACKSTITCH){
+				currentMode = Mode.NONE;
+				toolbarPanel.changeStatus("");
+			}
+			else {
+				currentMode = Mode.BACKSTITCH;
+				toolbarPanel.changeStatus("Backstitch mode enabled");
+				bsPanel.resetLineStack();
+			}
+		}
+		else if (m==Mode.ERASE){
+			if (currentMode==Mode.ERASE){
+				currentMode = Mode.NONE;
+				toolbarPanel.changeStatus("");
+			}
+			else {
+				currentMode = Mode.ERASE;
+				toolbarPanel.changeStatus("Erase mode enabled");
+				bsPanel.resetEraseStack();
+			}
+		}
+		else {
+			currentMode = m;
+			toolbarPanel.changeStatus("");
+		}
 	}
-	public static boolean getBackstitchMode(){
-		return backstitchMode;
+	public static Mode getMode(){
+		return currentMode;
 	}
 	
 	public static SquareCanvas getSquareCanvas(){
@@ -212,12 +239,6 @@ public class Controller {
 		else {
 			//do nothing
 		}
-	}
-	
-	public static void changeBackstitchMode(){
-		System.out.println(backstitchMode);
-		backstitchMode = backstitchMode ? false : true;
-		System.out.println(backstitchMode);
 	}
 	
 }

@@ -19,6 +19,7 @@ public class ToolbarPanel extends JPanel {
 	private IconJButton _backstitch, _brush, _eraser, _new, _open, _paint_bucket, _palette,
 				_pattern, _save, _zoom_in, _zoom_out;
 	private JButton[] icon_buttons = new JButton[ICON_NUM];
+	private JLabel statusLabel;
 
 	public ToolbarPanel() {
 		try {
@@ -48,7 +49,10 @@ public class ToolbarPanel extends JPanel {
 		    public void actionPerformed(ActionEvent evt){Controller.zoomOut();}
 		});
 		_backstitch.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.changeBackstitchMode();}
+		    public void actionPerformed(ActionEvent evt){Controller.setMode(Controller.Mode.BACKSTITCH);}
+		});
+		_eraser.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){Controller.setMode(Controller.Mode.ERASE);}
 		});
 		
 		icon_buttons[0] = _new;
@@ -77,6 +81,8 @@ public class ToolbarPanel extends JPanel {
 		JPanel status = new JPanel();
 		status.setPreferredSize(new Dimension(800-(11*IMAGE_SIZE), 32));
 		status.setBackground(Color.white);
+		statusLabel = new JLabel();
+		status.add(statusLabel);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 11;
 		add(status, c);
@@ -95,6 +101,11 @@ public class ToolbarPanel extends JPanel {
 	
 	public void actionPerformed(ActionEvent e) {
 
+		
+	}
+	
+	public void changeStatus(String s){
+		statusLabel.setText(s);
 		
 	}
 }

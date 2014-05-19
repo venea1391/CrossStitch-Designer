@@ -19,7 +19,8 @@ public class BackStitchPanel extends JPanel {
 	private Graphics2D big;
 	private ArrayList<Line> lines = new ArrayList<Line>();
 	private Stack<Line> lineStack = new Stack<Line>();  //stack should be reset every time
-								// we enter backstitch mode, maybe should live in Controller
+								// we enter backstitch mode
+	private Stack<Line> eraseStack = new Stack<Line>();
 	
 	public BackStitchPanel(){
 		setOpaque(false);
@@ -30,31 +31,63 @@ public class BackStitchPanel extends JPanel {
 	        @Override
 	        public void mousePressed(MouseEvent e) {
 	            System.out.println("mouse pressed");
-	            if (Controller.getBackstitchMode()){
+	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
+	            		(Controller.getMode()==Controller.Mode.ERASE)){
 	            	startPoint = new Point(approximate(e.getX()), approximate(e.getY()));
 	            }
 	        }
 	        @Override
 	        public void mouseReleased(MouseEvent e) {
 	            System.out.println("mouse released");
-	            if (Controller.getBackstitchMode()){
+	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
+	            	(Controller.getMode()==Controller.Mode.ERASE)){
 	            	endPoint = new Point(approximate(e.getX()), approximate(e.getY()));
-	            	int i = Square.EDGE/5; //scale with squares?
-	            	i = (i<2) ? 2 : i;
-	            	big.setColor(Color.black);
-	            	big.setStroke(new BasicStroke(i));
-	            	big.drawLine((int) startPoint.getX()*Square.EDGE, 
-	            			(int) startPoint.getY()*Square.EDGE, 
-	            			(int) endPoint.getX()*Square.EDGE, 
-	            			(int) endPoint.getY()*Square.EDGE);
-	            	breakupLine(startPoint, endPoint);
-	            	repaint();
+	            	
+	            	ArrayList<Line> segments = breakupLine(startPoint, endPoint);
+	            	if (!segments.isEmpty()){
+	            		if (Controller.getMode()==Controller.Mode.BACKSTITCH){
+	            			for (Line l : segments){
+	            				lines.add(l);
+	            				lineStack.add(l); //for undo operations
+	            			}
+	            			int i = Square.EDGE/5; //scale with squares?
+		            		i = (i<2) ? 2 : i;
+		            		big.setColor(Color.black);
+		            		big.setStroke(new BasicStroke(i));
+		            		big.drawLine((int) startPoint.getX()*Square.EDGE, 
+		            			(int) startPoint.getY()*Square.EDGE, 
+		            			(int) endPoint.getX()*Square.EDGE, 
+		            			(int) endPoint.getY()*Square.EDGE);
+		            		repaint();
+	            		}
+	            		else if (Controller.getMode()==Controller.Mode.ERASE){
+	            			//TODO I would like to be able to erase as I drag the mouse,
+	            			//not one line (no bends) at a time
+	            			ArrayList<Line> deleted = new ArrayList<Line>();
+	            			//find corresponding lines in "lines" list
+	            			for (Line l : segments){
+	            				int index = lines.indexOf(l);
+	            				if (index!=-1){
+	            					Line lineToErase = lines.get(index);
+	            					deleted.add(lineToErase);
+	            					lines.remove(index);
+	            				}
+	            			}
+	            			//save those lines in other stack "eraseStack"
+	            			for (Line l : deleted){
+	            				eraseStack.add(l); //for undo operations
+	            			}
+	            			//delete lines from "lines"
+	            			scaleBI();//force it to recognize that a line is missing
+	            			repaint();
+	            		}
+	            	}
 	            }
 	        }
 	        @Override
 	        public void mouseClicked(MouseEvent e) {
 	            System.out.println("mouse clicked");
-	            if (Controller.getBackstitchMode()){
+	            if (Controller.getMode()==Controller.Mode.BACKSTITCH){
 	            	//get coords, draw dot
 	            	//unnecessary
 	            }
@@ -113,8 +146,8 @@ public class BackStitchPanel extends JPanel {
 		big = grr;
 	}
 	
-	public void breakupLine(Point start, Point end){
-		ArrayList<Line> broken = new ArrayList<Line>();
+	public ArrayList<Line> breakupLine(Point start, Point end){
+		ArrayList<Line> segments = new ArrayList<Line>();
 		int spanX, spanY, x1, y1, x2, y2;
 		x1 = (int) start.getX();
 		y1 = (int) start.getY();
@@ -122,7 +155,7 @@ public class BackStitchPanel extends JPanel {
 		y2 = (int) end.getY();
 		//point
 		if (x1==x2 && y1==y2){ 
-			broken.add(new Line(start, end));
+			segments.add(new Line(start, end));
 		}
 		//straight horizontal
 		else if (y1==y2){ 
@@ -130,13 +163,13 @@ public class BackStitchPanel extends JPanel {
 			int x = x1;
 			while (spanX!=0){
 				if (spanX > 0){
-					broken.add(new Line(new Point(x, y1), 
+					segments.add(new Line(new Point(x, y1), 
 							new Point(x-1, y1)));
 					x--;
 					spanX--;
 				}
 				else {//span X < 0
-					broken.add(new Line(new Point(x, y1), 
+					segments.add(new Line(new Point(x, y1), 
 							new Point(x+1, y1)));
 					x++;
 					spanX++;
@@ -149,13 +182,13 @@ public class BackStitchPanel extends JPanel {
 			int y = y1;
 			while (spanY!=0){
 				if (spanY > 0){
-					broken.add(new Line(new Point(x1, y), 
+					segments.add(new Line(new Point(x1, y), 
 							new Point(x1, y-1)));
 					y--;
 					spanY--;
 				}
 				else {//span X < 0
-					broken.add(new Line(new Point(x1, y), 
+					segments.add(new Line(new Point(x1, y), 
 							new Point(x1, y+1)));
 					y++;
 					spanY++;
@@ -170,7 +203,7 @@ public class BackStitchPanel extends JPanel {
 			int x = x1;
 			while ((spanX != 0)&&(spanY != 0)){
 				if ((spanX > 0)&&(spanY > 0)){
-					broken.add(new Line(new Point(x-1, y-1), 
+					segments.add(new Line(new Point(x-1, y-1), 
 							new Point(x, y)));
 					y--;
 					spanY--;
@@ -178,7 +211,7 @@ public class BackStitchPanel extends JPanel {
 					spanX--;
 				}
 				else if ((spanX < 0)&&(spanY < 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x+1, y+1)));
 					y++;
 					spanY++;
@@ -186,7 +219,7 @@ public class BackStitchPanel extends JPanel {
 					spanX++;
 				}
 				else if ((spanX > 0)&&(spanY < 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x-1, y+1)));
 					y++;
 					spanY++;
@@ -194,7 +227,7 @@ public class BackStitchPanel extends JPanel {
 					spanX--;
 				}
 				else {  // if ((spanX < 0)&&(spanY > 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x+1, y-1)));
 					y--;
 					spanY--;
@@ -212,7 +245,7 @@ public class BackStitchPanel extends JPanel {
 			int x = x1;
 			while ((spanX != 0)&&(spanY != 0)){
 				if ((spanX > 0)&&(spanY > 0)){
-					broken.add(new Line(new Point(x-1, y-2), 
+					segments.add(new Line(new Point(x-1, y-2), 
 							new Point(x, y)));
 					y = y-2;
 					spanY = spanY-2;
@@ -220,7 +253,7 @@ public class BackStitchPanel extends JPanel {
 					spanX--;
 				}
 				else if ((spanX < 0)&&(spanY < 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x+1, y+2)));
 					y = y+2;
 					spanY = spanY+2;
@@ -228,7 +261,7 @@ public class BackStitchPanel extends JPanel {
 					spanX++;
 				}
 				else if ((spanX > 0)&&(spanY < 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x-1, y+2)));
 					y = y+2;
 					spanY = spanY+2;
@@ -236,7 +269,7 @@ public class BackStitchPanel extends JPanel {
 					spanX--;
 				}
 				else {  // if ((spanX < 0)&&(spanY > 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x+1, y-2)));
 					y = y-2;
 					spanY = spanY-2;
@@ -254,7 +287,7 @@ public class BackStitchPanel extends JPanel {
 			int x = x1;
 			while ((spanX != 0)&&(spanY != 0)){
 				if ((spanX > 0)&&(spanY > 0)){
-					broken.add(new Line(new Point(x-2, y-1), 
+					segments.add(new Line(new Point(x-2, y-1), 
 							new Point(x, y)));
 					y--;
 					spanY--;
@@ -262,7 +295,7 @@ public class BackStitchPanel extends JPanel {
 					spanX = spanX-2;
 				}
 				else if ((spanX < 0)&&(spanY < 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x+2, y+1)));
 					y++;
 					spanY++;
@@ -270,7 +303,7 @@ public class BackStitchPanel extends JPanel {
 					spanX = spanX+2;
 				}
 				else if ((spanX > 0)&&(spanY < 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x-2, y+1)));
 					y++;
 					spanY++;
@@ -278,7 +311,7 @@ public class BackStitchPanel extends JPanel {
 					spanX = spanX-2;
 				}
 				else {  // if ((spanX < 0)&&(spanY > 0)){
-					broken.add(new Line(new Point(x, y), 
+					segments.add(new Line(new Point(x, y), 
 							new Point(x+2, y-1)));
 					y--;
 					spanY--;
@@ -288,9 +321,18 @@ public class BackStitchPanel extends JPanel {
 
 			}
 		}
-		for (Line l : broken){
-			lines.add(l);
-			lineStack.add(l); //for undo operations
+		else {
+			System.out.println("not a recognized line");
+			return segments;
 		}
+		
+		return segments;
+	}
+
+	public void resetLineStack(){
+		lineStack.clear();
+	}
+	public void resetEraseStack(){
+		eraseStack.clear();
 	}
 }
