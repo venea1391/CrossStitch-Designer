@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
 
 import javax.swing.*;
@@ -27,20 +28,28 @@ public class BackStitchPanel extends JPanel {
 		System.out.println("constructing bsPanel");
 		setSize(800, 600);
 		
+		mouseMovedEventHandler handler = new mouseMovedEventHandler();
+		//this.addMouseListener(handler); 
+		this.addMouseMotionListener(handler);
+		
 		addMouseListener(new MouseListener() {
 	        @Override
 	        public void mousePressed(MouseEvent e) {
 	            System.out.println("mouse pressed");
 	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
-	            		(Controller.getMode()==Controller.Mode.ERASE)){
+	            		(Controller.getMode()==Controller.Mode.ERASE_BS)){
 	            	startPoint = new Point(approximate(e.getX()), approximate(e.getY()));
+	            }
+	            else if ((Controller.getMode()==Controller.Mode.PAINT) ||
+		            	(Controller.getMode()==Controller.Mode.ERASE_SQ)){
+	            	Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
 	            }
 	        }
 	        @Override
 	        public void mouseReleased(MouseEvent e) {
 	            System.out.println("mouse released");
 	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
-	            	(Controller.getMode()==Controller.Mode.ERASE)){
+	            	(Controller.getMode()==Controller.Mode.ERASE_BS)){
 	            	endPoint = new Point(approximate(e.getX()), approximate(e.getY()));
 	            	
 	            	ArrayList<Line> segments = breakupLine(startPoint, endPoint);
@@ -52,7 +61,7 @@ public class BackStitchPanel extends JPanel {
 	            			}
 	            			int i = Square.EDGE/5; //scale with squares?
 		            		i = (i<2) ? 2 : i;
-		            		big.setColor(Color.black);
+		            		big.setColor(Controller.currentColor);
 		            		big.setStroke(new BasicStroke(i));
 		            		big.drawLine((int) startPoint.getX()*Square.EDGE, 
 		            			(int) startPoint.getY()*Square.EDGE, 
@@ -60,7 +69,7 @@ public class BackStitchPanel extends JPanel {
 		            			(int) endPoint.getY()*Square.EDGE);
 		            		repaint();
 	            		}
-	            		else if (Controller.getMode()==Controller.Mode.ERASE){
+	            		else if (Controller.getMode()==Controller.Mode.ERASE_BS){
 	            			//TODO I would like to be able to erase as I drag the mouse,
 	            			//not one line (no bends) at a time
 	            			ArrayList<Line> deleted = new ArrayList<Line>();
@@ -83,6 +92,33 @@ public class BackStitchPanel extends JPanel {
 	            		}
 	            	}
 	            }
+	            else if ((Controller.getMode()==Controller.Mode.PAINT) ||
+		            	(Controller.getMode()==Controller.Mode.ERASE_SQ)){
+	            	Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+		            	/*endPoint = new Point(approximate(e.getX()), approximate(e.getY()));
+		            	
+		            	ArrayList<Line> segments = breakupLine(startPoint, endPoint);
+		            	if (!segments.isEmpty()){
+		            		if (Controller.getMode()==Controller.Mode.BACKSTITCH){
+		            			for (Line l : segments){
+		            				lines.add(l);
+		            				lineStack.add(l); //for undo operations
+		            			}
+		            			int i = Square.EDGE/5; //scale with squares?
+			            		i = (i<2) ? 2 : i;
+			            		big.setColor(Controller.currentColor);
+			            		big.setStroke(new BasicStroke(i));
+			            		big.drawLine((int) startPoint.getX()*Square.EDGE, 
+			            			(int) startPoint.getY()*Square.EDGE, 
+			            			(int) endPoint.getX()*Square.EDGE, 
+			            			(int) endPoint.getY()*Square.EDGE);
+			            		repaint();
+		            		}
+		            		else if (Controller.getMode()==Controller.Mode.ERASE_BS){
+		            			
+		            		}
+		            	}*/
+		            }
 	        }
 	        @Override
 	        public void mouseClicked(MouseEvent e) {
@@ -123,6 +159,10 @@ public class BackStitchPanel extends JPanel {
 		return i;
 	}
 	
+	public int paintApproximate(double d){
+		return (int) (d/Square.EDGE);
+	}
+	
 	public void createBI(){
 		img = new BufferedImage(Controller.getWidth()*Square.EDGE, 
 				Controller.getHeight()*Square.EDGE, BufferedImage.TYPE_INT_ARGB);
@@ -134,9 +174,9 @@ public class BackStitchPanel extends JPanel {
 		Graphics2D grr = newImg.createGraphics();
 		int i = Square.EDGE/5; //scale with squares
     	i = (i<2) ? 2 : i;
-		grr.setColor(Color.black);
     	grr.setStroke(new BasicStroke(i));
 		for (Line l : lines){
+			grr.setColor(l.getColor());
 			grr.drawLine((int) (l.getStartPoint().getX()*Square.EDGE), 
 					(int) (l.getStartPoint().getY()*Square.EDGE), 
         			(int) (l.getEndPoint().getX()*Square.EDGE), 
@@ -153,9 +193,10 @@ public class BackStitchPanel extends JPanel {
 		y1 = (int) start.getY();
 		x2 = (int) end.getX();
 		y2 = (int) end.getY();
+		Color c = Controller.currentColor;
 		//point
 		if (x1==x2 && y1==y2){ 
-			segments.add(new Line(start, end));
+			segments.add(new Line(start, end, c));
 		}
 		//straight horizontal
 		else if (y1==y2){ 
@@ -164,13 +205,13 @@ public class BackStitchPanel extends JPanel {
 			while (spanX!=0){
 				if (spanX > 0){
 					segments.add(new Line(new Point(x, y1), 
-							new Point(x-1, y1)));
+							new Point(x-1, y1), c));
 					x--;
 					spanX--;
 				}
 				else {//span X < 0
 					segments.add(new Line(new Point(x, y1), 
-							new Point(x+1, y1)));
+							new Point(x+1, y1), c));
 					x++;
 					spanX++;
 				}
@@ -183,13 +224,13 @@ public class BackStitchPanel extends JPanel {
 			while (spanY!=0){
 				if (spanY > 0){
 					segments.add(new Line(new Point(x1, y), 
-							new Point(x1, y-1)));
+							new Point(x1, y-1), c));
 					y--;
 					spanY--;
 				}
 				else {//span X < 0
 					segments.add(new Line(new Point(x1, y), 
-							new Point(x1, y+1)));
+							new Point(x1, y+1), c));
 					y++;
 					spanY++;
 				}
@@ -204,7 +245,7 @@ public class BackStitchPanel extends JPanel {
 			while ((spanX != 0)&&(spanY != 0)){
 				if ((spanX > 0)&&(spanY > 0)){
 					segments.add(new Line(new Point(x-1, y-1), 
-							new Point(x, y)));
+							new Point(x, y), c));
 					y--;
 					spanY--;
 					x--;
@@ -212,7 +253,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else if ((spanX < 0)&&(spanY < 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x+1, y+1)));
+							new Point(x+1, y+1), c));
 					y++;
 					spanY++;
 					x++;
@@ -220,7 +261,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else if ((spanX > 0)&&(spanY < 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x-1, y+1)));
+							new Point(x-1, y+1), c));
 					y++;
 					spanY++;
 					x--;
@@ -228,7 +269,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else {  // if ((spanX < 0)&&(spanY > 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x+1, y-1)));
+							new Point(x+1, y-1), c));
 					y--;
 					spanY--;
 					x++;
@@ -246,7 +287,7 @@ public class BackStitchPanel extends JPanel {
 			while ((spanX != 0)&&(spanY != 0)){
 				if ((spanX > 0)&&(spanY > 0)){
 					segments.add(new Line(new Point(x-1, y-2), 
-							new Point(x, y)));
+							new Point(x, y), c));
 					y = y-2;
 					spanY = spanY-2;
 					x--;
@@ -254,7 +295,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else if ((spanX < 0)&&(spanY < 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x+1, y+2)));
+							new Point(x+1, y+2), c));
 					y = y+2;
 					spanY = spanY+2;
 					x++;
@@ -262,7 +303,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else if ((spanX > 0)&&(spanY < 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x-1, y+2)));
+							new Point(x-1, y+2), c));
 					y = y+2;
 					spanY = spanY+2;
 					x--;
@@ -270,7 +311,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else {  // if ((spanX < 0)&&(spanY > 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x+1, y-2)));
+							new Point(x+1, y-2), c));
 					y = y-2;
 					spanY = spanY-2;
 					x++;
@@ -288,7 +329,7 @@ public class BackStitchPanel extends JPanel {
 			while ((spanX != 0)&&(spanY != 0)){
 				if ((spanX > 0)&&(spanY > 0)){
 					segments.add(new Line(new Point(x-2, y-1), 
-							new Point(x, y)));
+							new Point(x, y), c));
 					y--;
 					spanY--;
 					x = x-2;
@@ -296,7 +337,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else if ((spanX < 0)&&(spanY < 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x+2, y+1)));
+							new Point(x+2, y+1), c));
 					y++;
 					spanY++;
 					x = x+2;
@@ -304,7 +345,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else if ((spanX > 0)&&(spanY < 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x-2, y+1)));
+							new Point(x-2, y+1), c));
 					y++;
 					spanY++;
 					x = x-2;
@@ -312,7 +353,7 @@ public class BackStitchPanel extends JPanel {
 				}
 				else {  // if ((spanX < 0)&&(spanY > 0)){
 					segments.add(new Line(new Point(x, y), 
-							new Point(x+2, y-1)));
+							new Point(x+2, y-1), c));
 					y--;
 					spanY--;
 					x = x+2;
@@ -335,4 +376,17 @@ public class BackStitchPanel extends JPanel {
 	public void resetEraseStack(){
 		eraseStack.clear();
 	}
+	
+	
+	class mouseMovedEventHandler extends MouseMotionAdapter {           
+	    @Override
+	    public void mouseDragged(MouseEvent e)
+	    {
+	        //System.out.println(String.format("MouseDragged via MouseMotionAdapter / X,Y : %s,%s ", e.getX(), e.getY()));
+	        if ((Controller.getMode()==Controller.Mode.PAINT) ||
+	            	(Controller.getMode()==Controller.Mode.ERASE_SQ)){
+            	Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+	        }
+	    }
+	  }
 }

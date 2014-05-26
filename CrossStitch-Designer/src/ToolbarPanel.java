@@ -18,8 +18,10 @@ public class ToolbarPanel extends JPanel {
 	private BufferedImage icons_img;
 	private IconJButton _backstitch, _brush, _eraser, _new, _open, _paint_bucket, _palette,
 				_pattern, _save, _zoom_in, _zoom_out;
-	private JButton[] icon_buttons = new JButton[ICON_NUM];
+	private IconJButton[] icon_buttons = new IconJButton[ICON_NUM];
 	private JLabel statusLabel;
+	private JPanel eraseType;
+	private JRadioButton eraseBS, eraseSQ;
 
 	public ToolbarPanel() {
 		try {
@@ -49,10 +51,41 @@ public class ToolbarPanel extends JPanel {
 		    public void actionPerformed(ActionEvent evt){Controller.zoomOut();}
 		});
 		_backstitch.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.setMode(Controller.Mode.BACKSTITCH);}
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.Mode oldMode = Controller.getMode();
+		    	Controller.setMode(Controller.Mode.BACKSTITCH);
+		    	changeSelectedIcon(oldMode);
+		    	showEraseType(false);}
 		});
 		_eraser.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.setMode(Controller.Mode.ERASE);}
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.Mode oldMode = Controller.getMode();
+		    	if (eraseBS.isSelected()){
+		    		Controller.setMode(Controller.Mode.ERASE_BS);
+		    	}
+		    	else {
+		    		Controller.setMode(Controller.Mode.ERASE_SQ);
+		    	}
+		    	changeSelectedIcon(oldMode);
+		    	if (oldMode==Controller.Mode.ERASE_BS || oldMode==Controller.Mode.ERASE_SQ){
+		    		showEraseType(false);
+		    	}
+		    	else {showEraseType(true);}
+		    }
+		});
+		_brush.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.Mode oldMode = Controller.getMode();
+		    	Controller.setMode(Controller.Mode.PAINT);
+		    	changeSelectedIcon(oldMode);
+		    	showEraseType(false);
+		    	}
+		});
+		_palette.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent evt){
+				Controller.chooseColor();
+				//showEraseType(false);
+			}
 		});
 		
 		icon_buttons[0] = _new;
@@ -78,6 +111,26 @@ public class ToolbarPanel extends JPanel {
 			c.gridx = i;
 	        add(icon_buttons[i], c);
 	    }		
+		
+		eraseType = new JPanel();
+		eraseType.setBackground(Color.white);
+		eraseType.setPreferredSize(new Dimension(800-(11*IMAGE_SIZE), 32));
+		eraseBS = new JRadioButton("Erase Backstitch");
+		eraseBS.setSelected(true);
+	    eraseSQ = new JRadioButton("Erase Square");
+	    ButtonGroup typeGroup = new ButtonGroup();
+	    typeGroup.add(eraseBS);
+	    typeGroup.add(eraseSQ);
+	    eraseBS.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){Controller.setMode(Controller.Mode.ERASE_BS);}
+		});
+	    eraseSQ.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){Controller.setMode(Controller.Mode.ERASE_SQ);}
+		});
+	    eraseType.add(eraseBS);
+	    eraseType.add(eraseSQ);
+	    
+		//type.
 		JPanel status = new JPanel();
 		status.setPreferredSize(new Dimension(800-(11*IMAGE_SIZE), 32));
 		status.setBackground(Color.white);
@@ -85,7 +138,10 @@ public class ToolbarPanel extends JPanel {
 		status.add(statusLabel);
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 11;
-		add(status, c);
+		//add(status, c);
+		//c.gridx = 12;
+		add(eraseType, c);
+		showEraseType(false);
 		
 		setSize(800, 32);
 		setBackground(Color.white);
@@ -95,17 +151,52 @@ public class ToolbarPanel extends JPanel {
 
 	public void enableAllIcons(){
 		for(int i=0 ; i<ICON_NUM; i++){
-	        icon_buttons[i].enable();
+	        icon_buttons[i].setEnabled(true);
 	    }	
-	}
-	
-	public void actionPerformed(ActionEvent e) {
-
-		
 	}
 	
 	public void changeStatus(String s){
 		statusLabel.setText(s);
 		
+	}
+	
+	public void changeSelectedIcon(Controller.Mode m){
+		if (m==Controller.Mode.BACKSTITCH){
+			_backstitch.enableImage();
+		}
+		else if (m==Controller.Mode.ERASE_BS || m==Controller.Mode.ERASE_SQ){
+			_eraser.enableImage();
+		}
+		else if (m==Controller.Mode.PAINT){
+			_brush.enableImage();
+		}
+		
+		switch (Controller.getMode()){
+			case BACKSTITCH:
+				_backstitch.select();
+				break;
+			case ERASE_BS:
+				_eraser.select();
+				break;
+			case ERASE_SQ:
+				_eraser.select();
+				break;
+			case PAINT:
+				_brush.select();
+				break;
+			default:
+				break;
+		}
+	}
+	
+	public void showEraseType(boolean b){
+		if (b){
+			eraseBS.setVisible(true);
+			eraseSQ.setVisible(true);
+		}
+		else {
+			eraseBS.setVisible(false);
+			eraseSQ.setVisible(false);
+		}
 	}
 }

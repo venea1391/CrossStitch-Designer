@@ -10,8 +10,10 @@ import javax.swing.*;
 public class IconJButton extends JButton {
 	public static final int IMAGE_SIZE = 32;
 	
-	private ImageIcon disabled, enabled, highlighted, pressed;
+	private ImageIcon disabled, enabled, highlighted, selected;
 	public iconType type;
+	private enum statusType {DISABLED, ENABLED, HIGHLIGHTED, SELECTED};
+	private statusType status;
 	
 	public IconJButton(BufferedImage img, iconType type){
 		this.type = type;
@@ -21,7 +23,7 @@ public class IconJButton extends JButton {
     			.getSubimage(IMAGE_SIZE, 0, IMAGE_SIZE, IMAGE_SIZE));
 		this.highlighted = new ImageIcon(img
     			.getSubimage(2*IMAGE_SIZE, 0, IMAGE_SIZE, IMAGE_SIZE));
-		this.pressed = new ImageIcon(img
+		this.selected = new ImageIcon(img
     			.getSubimage(3*IMAGE_SIZE, 0, IMAGE_SIZE, IMAGE_SIZE));
 		setIcon(disabled);
 		setPreferredSize(new Dimension(32, 32));
@@ -31,13 +33,31 @@ public class IconJButton extends JButton {
             	highlight();
             }
             public void mouseExited(MouseEvent evt) {
-            	enable();
+            	if (status==statusType.DISABLED){
+            		disable();
+            	}
+            	else if(status==statusType.ENABLED){
+            		enableImage();
+            	}
+            	else if(status==statusType.SELECTED){
+            		select();
+            	}
+            	//enableImage();
             }
             public void mousePressed(MouseEvent evt) {
-            	press();
+            	select();
             }
             public void mouseReleased(MouseEvent evt) {
-            	enable();
+            	//enableImage();
+            	if (status==statusType.DISABLED){
+            		disable();
+            	}
+            	else if(status==statusType.ENABLED){
+            		enableImage();
+            	}
+            	else if(status==statusType.SELECTED){
+            		select();
+            	}
             }
         });
 		
@@ -45,15 +65,27 @@ public class IconJButton extends JButton {
 	
 	public void disable(){
 		setIcon(disabled);
+		status = statusType.DISABLED;
 	}
-	public void enable(){
+	public void enableImage(){
 		setIcon(enabled);
+		status = statusType.ENABLED;
+	}
+	public void setEnabled(boolean b){
+		if (b){
+			setIcon(enabled);
+			status = statusType.ENABLED;
+		}
+		else {
+			status = statusType.DISABLED;
+		}
 	}
 	public void highlight(){
 		setIcon(highlighted);
 	}
-	public void press(){
-		setIcon(pressed);
+	public void select(){
+		setIcon(selected);
+		status = statusType.SELECTED;
 	}
 
 }

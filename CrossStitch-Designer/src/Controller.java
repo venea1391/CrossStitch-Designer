@@ -1,4 +1,5 @@
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.swing.JColorChooser;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
@@ -26,9 +28,9 @@ public class Controller {
 	private static ToolbarPanel toolbarPanel;
 	private static BackStitchPanel bsPanel;
 	private static JLayeredPane designArea;
-	private static boolean backstitchMode = false;
-	public enum Mode {NONE, BACKSTITCH, ERASE};
+	public enum Mode {NONE, BACKSTITCH, ERASE_BS, ERASE_SQ, PALETTE, PAINT};
 	private static Mode currentMode = Mode.NONE;
+	public static Color currentColor = Color.black;
 	//custom path
 	static final JFileChooser fc = new JFileChooser("/Volumes/Macintosh HDD/HDD desktop/crafts/cross stitch");
 	
@@ -81,20 +83,35 @@ public class Controller {
 				bsPanel.resetLineStack();
 			}
 		}
-		else if (m==Mode.ERASE){
-			if (currentMode==Mode.ERASE){
+		else if (m==Mode.PAINT){
+			if (currentMode==Mode.PAINT){
 				currentMode = Mode.NONE;
 				toolbarPanel.changeStatus("");
 			}
 			else {
-				currentMode = Mode.ERASE;
+				currentMode = Mode.PAINT;
+				toolbarPanel.changeStatus("Paint mode enabled");
+				canvasPanel.resetPaintStack();
+				//bsPanel.setEnabled(false);
+				//canvasPanel.setEnabled(true);
+				//canvasPanel.setFocusable(true);
+			}
+		}
+		//I need to handle ERASE_SQ here.
+		else if (m==Mode.ERASE_BS){
+			if (currentMode==Mode.ERASE_BS){
+				currentMode = Mode.NONE;
+				toolbarPanel.changeStatus("");
+			}
+			else {
+				currentMode = Mode.ERASE_BS;
 				toolbarPanel.changeStatus("Erase mode enabled");
 				bsPanel.resetEraseStack();
 			}
 		}
 		else {
 			currentMode = m;
-			toolbarPanel.changeStatus("");
+			toolbarPanel.changeStatus("why am i here");
 		}
 	}
 	public static Mode getMode(){
@@ -241,4 +258,20 @@ public class Controller {
 		}
 	}
 	
+	public static void chooseColor(){
+		currentColor = JColorChooser.showDialog(designArea, "Choose a color", currentColor);
+		//System.out.println("The selected color was:" + color);
+
+	}
+	
+	public static void paint(int x, int y){
+		System.out.println("sldkfjwaoifd");
+		if ((x>=width*Square.EDGE) || (y>=height*Square.EDGE)){
+			return;
+		}
+		int i = sqCanvas.findAndChange(x, y, currentColor);
+		if (i==1){
+			canvasPanel.repaint();
+		}
+	}
 }

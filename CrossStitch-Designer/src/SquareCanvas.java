@@ -67,4 +67,18 @@ public class SquareCanvas {
 		}
 		return instance;
 	}
+	public static int findAndChange(int x, int y, Color c){
+		Square s = find(x, y);
+		if (s==null){
+			return 0;
+		}
+		s.setColor(c);//////
+		return 1;
+	}
+	public static Square find(int x, int y){
+		if (canvas.get(y)!=null){
+			return canvas.get(y).get(x);
+		}
+		return null;
+	}
 }
