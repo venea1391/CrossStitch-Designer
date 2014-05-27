@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -12,7 +14,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class ToolbarPanel extends JPanel {
+public class ToolbarPanel extends JPanel implements KeyListener {
 	public static final int ICON_NUM = 11;
 	public static final int IMAGE_SIZE = 32;
 	private BufferedImage icons_img;
@@ -30,7 +32,7 @@ public class ToolbarPanel extends JPanel {
 			e.printStackTrace();
 			return;
 		}
-
+		addKeyListener(this);
 		_backstitch = new IconJButton(icons_img.getSubimage(0, 0, IMAGE_SIZE*4, IMAGE_SIZE), iconType.BACKSTITCH); //backstitch
 		_brush = new IconJButton(icons_img.getSubimage(0, IMAGE_SIZE*1, IMAGE_SIZE*4, IMAGE_SIZE), iconType.BRUSH); //brush
 		_eraser = new IconJButton (icons_img.getSubimage(0, IMAGE_SIZE*2, IMAGE_SIZE*4, IMAGE_SIZE), iconType.ERASER); //eraser
@@ -45,29 +47,32 @@ public class ToolbarPanel extends JPanel {
 		
 		
 		_zoom_in.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.zoomIn();}
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.zoomIn();
+		    	Controller.changedMode = false;
+		    }
 		});
 		_zoom_out.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.zoomOut();}
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.zoomOut();
+		    	Controller.changedMode = false;
+		    }
 		});
 		_backstitch.addActionListener(new ActionListener(){
 		    public void actionPerformed(ActionEvent evt){
 		    	Controller.Mode oldMode = Controller.getMode();
 		    	Controller.setMode(Controller.Mode.BACKSTITCH);
 		    	changeSelectedIcon(oldMode);
-		    	showEraseType(false);}
+		    	showEraseType(false);
+		    	Controller.changedMode = true;}
 		});
 		_eraser.addActionListener(new ActionListener(){
 		    public void actionPerformed(ActionEvent evt){
 		    	Controller.Mode oldMode = Controller.getMode();
-		    	if (eraseBS.isSelected()){
-		    		Controller.setMode(Controller.Mode.ERASE_BS);
-		    	}
-		    	else {
-		    		Controller.setMode(Controller.Mode.ERASE_SQ);
-		    	}
+		    	Controller.setMode(Controller.Mode.ERASE);
 		    	changeSelectedIcon(oldMode);
-		    	if (oldMode==Controller.Mode.ERASE_BS || oldMode==Controller.Mode.ERASE_SQ){
+		    	Controller.changedMode = true;
+		    	if (oldMode==Controller.Mode.ERASE){
 		    		showEraseType(false);
 		    	}
 		    	else {showEraseType(true);}
@@ -78,13 +83,23 @@ public class ToolbarPanel extends JPanel {
 		    	Controller.Mode oldMode = Controller.getMode();
 		    	Controller.setMode(Controller.Mode.PAINT);
 		    	changeSelectedIcon(oldMode);
+		    	Controller.changedMode = true;
+		    	showEraseType(false);
+		    	}
+		});
+		_paint_bucket.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.Mode oldMode = Controller.getMode();
+		    	Controller.setMode(Controller.Mode.PBUCKET);
+		    	changeSelectedIcon(oldMode);
+		    	Controller.changedMode = true;
 		    	showEraseType(false);
 		    	}
 		});
 		_palette.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent evt){
 				Controller.chooseColor();
-				//showEraseType(false);
+				Controller.changedMode = false;
 			}
 		});
 		
@@ -122,10 +137,10 @@ public class ToolbarPanel extends JPanel {
 	    typeGroup.add(eraseBS);
 	    typeGroup.add(eraseSQ);
 	    eraseBS.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.setMode(Controller.Mode.ERASE_BS);}
+		    public void actionPerformed(ActionEvent evt){Controller.currentEraserMode = Controller.EMode.EBS;}
 		});
 	    eraseSQ.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.setMode(Controller.Mode.ERASE_SQ);}
+		    public void actionPerformed(ActionEvent evt){Controller.currentEraserMode = Controller.EMode.ESQ;}
 		});
 	    eraseType.add(eraseBS);
 	    eraseType.add(eraseSQ);
@@ -147,7 +162,15 @@ public class ToolbarPanel extends JPanel {
 		setBackground(Color.white);
 		
 	}
-
+	
+	public void keyPressed(KeyEvent ke) {  
+        if (ke.getKeyCode() == KeyEvent.VK_Z) { 
+        	//undo(); 
+        	}  
+    }  
+    
+    public void keyReleased(KeyEvent ke) {} 
+    public void keyTyped(KeyEvent e) {}
 
 	public void enableAllIcons(){
 		for(int i=0 ; i<ICON_NUM; i++){
@@ -164,10 +187,13 @@ public class ToolbarPanel extends JPanel {
 		if (m==Controller.Mode.BACKSTITCH){
 			_backstitch.enableImage();
 		}
-		else if (m==Controller.Mode.ERASE_BS || m==Controller.Mode.ERASE_SQ){
+		else if (m==Controller.Mode.ERASE){
 			_eraser.enableImage();
 		}
 		else if (m==Controller.Mode.PAINT){
+			_brush.enableImage();
+		}
+		else if (m==Controller.Mode.PBUCKET){
 			_brush.enableImage();
 		}
 		
@@ -175,14 +201,14 @@ public class ToolbarPanel extends JPanel {
 			case BACKSTITCH:
 				_backstitch.select();
 				break;
-			case ERASE_BS:
-				_eraser.select();
-				break;
-			case ERASE_SQ:
+			case ERASE:
 				_eraser.select();
 				break;
 			case PAINT:
 				_brush.select();
+				break;
+			case PBUCKET:
+				_paint_bucket.select();
 				break;
 			default:
 				break;

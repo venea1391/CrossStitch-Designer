@@ -6,38 +6,14 @@ import java.util.HashMap;
 
 
 public class SquareCanvas {
-	private static SquareCanvas instance;
 	private int width, height;
-	private static HashMap<Integer, HashMap<Integer, Square>> canvas; //map of rows of squares
+	private HashMap<Integer, HashMap<Integer, Square>> canvas; //map of rows of squares
 	
-	public SquareCanvas(){
-		this.width = 0;
-		this.height = 0;
-	}
-	
-	
-	public static SquareCanvas getInstance(){
-		if (instance!=null){
-			return instance;
-		}
-		else {
-			System.out.println("oops no canvas created");
-			//instance = new SquareCanvas();
-			return null;
-		}
-	}
-	
-	public static HashMap<Integer, HashMap<Integer, Square>> getCanvas(){
-		return canvas;
-	}
-	
-	public static SquareCanvas createSquareCanvas(int x, int y){
-		instance = new SquareCanvas();
-		instance.height = y;
-		instance.width = x;
-
+	public SquareCanvas(int x, int y){
+		this.width = x;
+		this.height = y;
 		HashMap<Integer, Square> row;
-		canvas = new HashMap<Integer, HashMap<Integer, Square>>();
+		this.canvas = new HashMap<Integer, HashMap<Integer, Square>>();
 		for (int i=0; i<y; i++){
 			row = new HashMap<Integer, Square>();
 			
@@ -46,36 +22,41 @@ public class SquareCanvas {
 			}
 			canvas.put(new Integer(i), row);
 		}
-		return instance;
 	}
-	public static SquareCanvas createSquareCanvas(BufferedImage img){
-		instance = new SquareCanvas();
-		instance.height = img.getHeight();
-		instance.width = img.getWidth();
+	
+	public SquareCanvas(BufferedImage img){
+		this.height = img.getHeight();
+		this.width = img.getWidth();
 		HashMap<Integer, Square> row;
 		Square s;
 		canvas = new HashMap<Integer, HashMap<Integer, Square>>();
-		for (int i=0; i<instance.height; i++){
+		for (int i=0; i<height; i++){
 			row = new HashMap<Integer, Square>();
 			
-			for (int j=0; j<instance.width; j++){
+			for (int j=0; j<width; j++){
 				Color color = new Color(img.getRGB(j, i));
 				s = new Square(color, i, j);
 				row.put(new Integer(j), s);
 			}
 			canvas.put(new Integer(i), row);
 		}
-		return instance;
 	}
-	public static int findAndChange(int x, int y, Color c){
-		Square s = find(x, y);
+	
+	public HashMap<Integer, HashMap<Integer, Square>> getCanvas(){
+		return canvas;
+	}
+	
+	public Square findAndChange(int x, int y, Color c){
+		Square s = find(x, y); //changing a copy???
 		if (s==null){
-			return 0;
+			return null;
 		}
+		Square r = new Square(s);
 		s.setColor(c);//////
-		return 1;
+		return r;
 	}
-	public static Square find(int x, int y){
+	
+	public Square find(int x, int y){
 		if (canvas.get(y)!=null){
 			return canvas.get(y).get(x);
 		}

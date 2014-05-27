@@ -49,14 +49,25 @@ public class IconJButton extends JButton {
             }
             public void mouseReleased(MouseEvent evt) {
             	//enableImage();
-            	if (status==statusType.DISABLED){
-            		disable();
+            	Controller.Mode m = Controller.getMode();
+            	if (Controller.changedMode==true){
+            		if (status==statusType.DISABLED){
+                		disable();
+                	}
+                	else if(status==statusType.ENABLED){
+                		enableImage();
+                	}
+                	else if(status==statusType.SELECTED){
+                		select();
+                	}
             	}
-            	else if(status==statusType.ENABLED){
-            		enableImage();
-            	}
-            	else if(status==statusType.SELECTED){
-            		select();
+            	else {
+	            	if (status==statusType.DISABLED){
+	            		disable();
+	            	}
+	            	else {
+	            		enableImage();
+	            	}
             	}
             }
         });

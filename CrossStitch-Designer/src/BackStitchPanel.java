@@ -6,6 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Stack;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
@@ -22,7 +26,15 @@ public class BackStitchPanel extends JPanel {
 	private Stack<Line> lineStack = new Stack<Line>();  //stack should be reset every time
 								// we enter backstitch mode
 	private Stack<Line> eraseStack = new Stack<Line>();
+	private Stack<Square> squareStack = new Stack<Square>();
+	private Point lastPoint;
 	
+	private Action undoAction = new AbstractAction()
+    {
+        @Override
+        public void actionPerformed(ActionEvent ae) {  undo();  }
+    };
+    
 	public BackStitchPanel(){
 		setOpaque(false);
 		System.out.println("constructing bsPanel");
@@ -31,25 +43,29 @@ public class BackStitchPanel extends JPanel {
 		mouseMovedEventHandler handler = new mouseMovedEventHandler();
 		//this.addMouseListener(handler); 
 		this.addMouseMotionListener(handler);
-		
+		getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("Z"),
+                "undo");
+		getActionMap().put("undo",
+                 undoAction);
 		addMouseListener(new MouseListener() {
 	        @Override
 	        public void mousePressed(MouseEvent e) {
 	            System.out.println("mouse pressed");
 	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
-	            		(Controller.getMode()==Controller.Mode.ERASE_BS)){
+	            		(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.EBS)){
 	            	startPoint = new Point(approximate(e.getX()), approximate(e.getY()));
 	            }
 	            else if ((Controller.getMode()==Controller.Mode.PAINT) ||
-		            	(Controller.getMode()==Controller.Mode.ERASE_SQ)){
-	            	Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+		            	(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.ESQ)){
+	            	Square oldSq = Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+	            	if (!squareStack.contains(oldSq)) {squareStack.push(oldSq);}
 	            }
 	        }
 	        @Override
 	        public void mouseReleased(MouseEvent e) {
 	            System.out.println("mouse released");
 	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
-	            	(Controller.getMode()==Controller.Mode.ERASE_BS)){
+	            	(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.EBS)){
 	            	endPoint = new Point(approximate(e.getX()), approximate(e.getY()));
 	            	
 	            	ArrayList<Line> segments = breakupLine(startPoint, endPoint);
@@ -57,7 +73,7 @@ public class BackStitchPanel extends JPanel {
 	            		if (Controller.getMode()==Controller.Mode.BACKSTITCH){
 	            			for (Line l : segments){
 	            				lines.add(l);
-	            				lineStack.add(l); //for undo operations
+	            				lineStack.push(l); //for undo operations
 	            			}
 	            			int i = Square.EDGE/5; //scale with squares?
 		            		i = (i<2) ? 2 : i;
@@ -69,7 +85,7 @@ public class BackStitchPanel extends JPanel {
 		            			(int) endPoint.getY()*Square.EDGE);
 		            		repaint();
 	            		}
-	            		else if (Controller.getMode()==Controller.Mode.ERASE_BS){
+	            		else if (Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.EBS){
 	            			//TODO I would like to be able to erase as I drag the mouse,
 	            			//not one line (no bends) at a time
 	            			ArrayList<Line> deleted = new ArrayList<Line>();
@@ -84,7 +100,7 @@ public class BackStitchPanel extends JPanel {
 	            			}
 	            			//save those lines in other stack "eraseStack"
 	            			for (Line l : deleted){
-	            				eraseStack.add(l); //for undo operations
+	            				eraseStack.push(l); //for undo operations TODO
 	            			}
 	            			//delete lines from "lines"
 	            			scaleBI();//force it to recognize that a line is missing
@@ -93,41 +109,13 @@ public class BackStitchPanel extends JPanel {
 	            	}
 	            }
 	            else if ((Controller.getMode()==Controller.Mode.PAINT) ||
-		            	(Controller.getMode()==Controller.Mode.ERASE_SQ)){
-	            	Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
-		            	/*endPoint = new Point(approximate(e.getX()), approximate(e.getY()));
-		            	
-		            	ArrayList<Line> segments = breakupLine(startPoint, endPoint);
-		            	if (!segments.isEmpty()){
-		            		if (Controller.getMode()==Controller.Mode.BACKSTITCH){
-		            			for (Line l : segments){
-		            				lines.add(l);
-		            				lineStack.add(l); //for undo operations
-		            			}
-		            			int i = Square.EDGE/5; //scale with squares?
-			            		i = (i<2) ? 2 : i;
-			            		big.setColor(Controller.currentColor);
-			            		big.setStroke(new BasicStroke(i));
-			            		big.drawLine((int) startPoint.getX()*Square.EDGE, 
-			            			(int) startPoint.getY()*Square.EDGE, 
-			            			(int) endPoint.getX()*Square.EDGE, 
-			            			(int) endPoint.getY()*Square.EDGE);
-			            		repaint();
-		            		}
-		            		else if (Controller.getMode()==Controller.Mode.ERASE_BS){
-		            			
-		            		}
-		            	}*/
+		            	(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.ESQ)){
+	            	Square oldSq = Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+	            	if (!squareStack.contains(oldSq)) {squareStack.push(oldSq);}
 		            }
 	        }
 	        @Override
-	        public void mouseClicked(MouseEvent e) {
-	            System.out.println("mouse clicked");
-	            if (Controller.getMode()==Controller.Mode.BACKSTITCH){
-	            	//get coords, draw dot
-	            	//unnecessary
-	            }
-	        }
+	        public void mouseClicked(MouseEvent e) {}
 	        @Override
 	        public void mouseExited(MouseEvent e) {}
 	        @Override
@@ -140,7 +128,8 @@ public class BackStitchPanel extends JPanel {
         return new Dimension(Controller.getWidth()*Square.EDGE, 
         		Controller.getHeight()*Square.EDGE);
     }
-	
+    
+    
 	public void paintComponent(Graphics g) {
         super.paintComponent(g);
         System.out.println("painting backstitch layer");
@@ -376,6 +365,44 @@ public class BackStitchPanel extends JPanel {
 	public void resetEraseStack(){
 		eraseStack.clear();
 	}
+	public void resetSquareStack(){
+		squareStack.clear();
+	}
+	
+	public void undo(){
+		
+		if (Controller.getMode() == Controller.Mode.BACKSTITCH){
+			if (lineStack.size()==0){
+				return;
+			}
+			Line l = lineStack.peek();
+			ArrayList<Line> deleted = new ArrayList<Line>();
+			//find corresponding line in "lines" list
+			int index = lines.indexOf(l);
+			if (index!=-1){
+				Line lineToErase = lines.get(index);
+				deleted.add(lineToErase);
+				lines.remove(index);
+				scaleBI();//force it to recognize that a line is missing
+				repaint();
+				lineStack.pop();
+			}
+			
+		}
+		else if (Controller.getMode() == Controller.Mode.PAINT){
+			if (squareStack.size()==0){
+				return;
+			}
+			Square s = squareStack.peek();
+			Controller.paint(s.getCol(), s.getRow(), s.getColor());
+			//scaleBI();//force it to recognize that a line is missing
+			repaint();
+			squareStack.pop();
+		}
+		else if (Controller.getMode() == Controller.Mode.ERASE){
+			//TODO ?
+		}
+	}
 	
 	
 	class mouseMovedEventHandler extends MouseMotionAdapter {           
@@ -384,8 +411,10 @@ public class BackStitchPanel extends JPanel {
 	    {
 	        //System.out.println(String.format("MouseDragged via MouseMotionAdapter / X,Y : %s,%s ", e.getX(), e.getY()));
 	        if ((Controller.getMode()==Controller.Mode.PAINT) ||
-	            	(Controller.getMode()==Controller.Mode.ERASE_SQ)){
-            	Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+	            	(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.ESQ)){
+            	Square oldSq = Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+            	
+            	if (!squareStack.contains(oldSq)) {squareStack.push(oldSq);}
 	        }
 	    }
 	  }

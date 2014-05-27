@@ -20,6 +20,13 @@ public class Square {
 		this.row = row;
 	}
 	
+	/* Copy constructor */
+	public Square(Square source) {
+		this.color = source.color;
+		this.col = source.col;
+		this.row = source.row;
+    }
+	
 	public void draw(Graphics g){
 		//must have coordinates
 		//coordinates per pixel/square
@@ -36,12 +43,31 @@ public class Square {
 		color = c;
 	}
 	
+	public Color getColor() {
+		return color;
+	}
+	
+	public int getCol() {
+		return col;
+	}
+
+	public void setCol(int col) {
+		this.col = col;
+	}
+
+	public int getRow() {
+		return row;
+	}
+
+	public void setRow(int row) {
+		this.row = row;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + col;
-		result = prime * result + ((color == null) ? 0 : color.hashCode());
 		result = prime * result + row;
 		return result;
 	}
@@ -56,11 +82,6 @@ public class Square {
 			return false;
 		Square other = (Square) obj;
 		if (col != other.col)
-			return false;
-		if (color == null) {
-			if (other.color != null)
-				return false;
-		} else if (!color.equals(other.color))
 			return false;
 		if (row != other.row)
 			return false;

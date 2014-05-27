@@ -7,6 +7,8 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -28,9 +30,13 @@ public class Controller {
 	private static ToolbarPanel toolbarPanel;
 	private static BackStitchPanel bsPanel;
 	private static JLayeredPane designArea;
-	public enum Mode {NONE, BACKSTITCH, ERASE_BS, ERASE_SQ, PALETTE, PAINT};
+	public enum Mode {NONE, BACKSTITCH, ERASE, PALETTE, PAINT, NEW, OPEN, SAVE, PATTERN, PBUCKET, ZOOMIN, ZOOMOUT};
 	private static Mode currentMode = Mode.NONE;
+	public enum EMode {EBS, ESQ};
+	public static EMode currentEraserMode = EMode.EBS;
 	public static Color currentColor = Color.black;
+	public static boolean changedMode = false;
+	public static JFrame mainFrame;
 	//custom path
 	static final JFileChooser fc = new JFileChooser("/Volumes/Macintosh HDD/HDD desktop/crafts/cross stitch");
 	
@@ -98,13 +104,13 @@ public class Controller {
 			}
 		}
 		//I need to handle ERASE_SQ here.
-		else if (m==Mode.ERASE_BS){
-			if (currentMode==Mode.ERASE_BS){
+		else if (m==Mode.ERASE){
+			if (currentMode==Mode.ERASE){
 				currentMode = Mode.NONE;
 				toolbarPanel.changeStatus("");
 			}
 			else {
-				currentMode = Mode.ERASE_BS;
+				currentMode = Mode.ERASE;
 				toolbarPanel.changeStatus("Erase mode enabled");
 				bsPanel.resetEraseStack();
 			}
@@ -140,6 +146,7 @@ public class Controller {
 		frame.setSize(800, 600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
+		mainFrame = frame;
 
 		frame.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -175,6 +182,8 @@ public class Controller {
 		setBackStitchPanel(bsPanel);
 		setDesignArea(designArea);
 		frame.setVisible(true);
+		
+		//System.out.println(frame.getFocusOwner().toString());
 		new StartOptionsDialog(frame);
 		
 	}
@@ -185,7 +194,7 @@ public class Controller {
 	public static void initializeSquareCanvas(int h, int w){
 		setHeight(h);
 		setWidth(w);
-		setSquareCanvas(SquareCanvas.createSquareCanvas(w, h));
+		setSquareCanvas(new SquareCanvas(w, h));
 		updateDesignArea();
 		bsPanel.createBI();
 		System.out.println("new blank canvas");
@@ -202,7 +211,7 @@ public class Controller {
             BufferedImage img;
             try {
                 img = ImageIO.read(file);
-                SquareCanvas.createSquareCanvas(img);
+                setSquareCanvas(new SquareCanvas(img));
                 setHeight(img.getHeight());
         		setWidth(img.getWidth());
                 updateDesignArea();
@@ -264,14 +273,36 @@ public class Controller {
 
 	}
 	
-	public static void paint(int x, int y){
-		System.out.println("sldkfjwaoifd");
+	public static Square paint(int x, int y){
+		Square i;
 		if ((x>=width*Square.EDGE) || (y>=height*Square.EDGE)){
-			return;
+			return null;
 		}
-		int i = sqCanvas.findAndChange(x, y, currentColor);
-		if (i==1){
+		if (Controller.getMode()==Controller.Mode.ERASE){
+			i = sqCanvas.findAndChange(x, y, null);
+		}
+		else {
+			i = sqCanvas.findAndChange(x, y, currentColor);
+		}
+		if (i!=null){
 			canvasPanel.repaint();
 		}
+		return i;
+	}
+	
+	public static Square paint(int x, int y, Color c){
+		Square i;
+		if ((x>=width*Square.EDGE) || (y>=height*Square.EDGE)){
+			return null;
+		}
+		i = sqCanvas.findAndChange(x, y, c);
+		if (i!=null){
+			canvasPanel.repaint();
+		}
+		return i;
+	}
+	
+	public void undo(){
+		bsPanel.undo();
 	}
 }
