@@ -12,6 +12,7 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.JColorChooser;
@@ -30,10 +31,12 @@ public class Controller {
 	private static ToolbarPanel toolbarPanel;
 	private static BackStitchPanel bsPanel;
 	private static JLayeredPane designArea;
-	public enum Mode {NONE, BACKSTITCH, ERASE, PALETTE, PAINT, NEW, OPEN, SAVE, PATTERN, PBUCKET, ZOOMIN, ZOOMOUT};
+	public enum Mode {NONE, BACKSTITCH, ERASE, PALETTE, PAINT, NEW, OPEN, SAVE, PATTERN, PBUCKET, ZOOMIN, ZOOMOUT, EXPORT, EYEDROPPER};
 	private static Mode currentMode = Mode.NONE;
 	public enum EMode {EBS, ESQ};
 	public static EMode currentEraserMode = EMode.EBS;
+	public enum PBMode {CONTIG, NOT_CONTIG};
+	public static PBMode currentPBucketMode = PBMode.NOT_CONTIG;
 	public static Color currentColor = Color.black;
 	public static boolean changedMode = false;
 	public static JFrame mainFrame;
@@ -81,43 +84,49 @@ public class Controller {
 		if (m==Mode.BACKSTITCH){
 			if (currentMode==Mode.BACKSTITCH){
 				currentMode = Mode.NONE;
-				toolbarPanel.changeStatus("");
 			}
 			else {
 				currentMode = Mode.BACKSTITCH;
-				toolbarPanel.changeStatus("Backstitch mode enabled");
 				bsPanel.resetLineStack();
 			}
 		}
 		else if (m==Mode.PAINT){
 			if (currentMode==Mode.PAINT){
 				currentMode = Mode.NONE;
-				toolbarPanel.changeStatus("");
 			}
 			else {
 				currentMode = Mode.PAINT;
-				toolbarPanel.changeStatus("Paint mode enabled");
-				canvasPanel.resetPaintStack();
-				//bsPanel.setEnabled(false);
-				//canvasPanel.setEnabled(true);
-				//canvasPanel.setFocusable(true);
+				bsPanel.resetSquareStack();
 			}
 		}
-		//I need to handle ERASE_SQ here.
 		else if (m==Mode.ERASE){
 			if (currentMode==Mode.ERASE){
 				currentMode = Mode.NONE;
-				toolbarPanel.changeStatus("");
 			}
 			else {
 				currentMode = Mode.ERASE;
-				toolbarPanel.changeStatus("Erase mode enabled");
 				bsPanel.resetEraseStack();
+			}
+		}
+		else if (m==Mode.PBUCKET){
+			if (currentMode==Mode.PBUCKET){
+				currentMode = Mode.NONE;
+			}
+			else {
+				currentMode = Mode.PBUCKET;
+				bsPanel.resetPBStack();
+			}
+		}
+		else if (m==Mode.EYEDROPPER){
+			if (currentMode==Mode.EYEDROPPER){
+				currentMode = Mode.NONE;
+			}
+			else {
+				currentMode = Mode.EYEDROPPER;
 			}
 		}
 		else {
 			currentMode = m;
-			toolbarPanel.changeStatus("why am i here");
 		}
 	}
 	public static Mode getMode(){
@@ -269,6 +278,7 @@ public class Controller {
 	
 	public static void chooseColor(){
 		currentColor = JColorChooser.showDialog(designArea, "Choose a color", currentColor);
+		toolbarPanel.changeCCPanel();
 		//System.out.println("The selected color was:" + color);
 
 	}
@@ -302,7 +312,33 @@ public class Controller {
 		return i;
 	}
 	
-	public void undo(){
-		bsPanel.undo();
+	public static ArrayList<Square> paintBucket(int x, int y){
+		ArrayList<Square> oldColorSquares = new ArrayList<Square>();
+		ArrayList<Square> toStack = new ArrayList<Square>();
+		Square s = sqCanvas.find(x, y);
+		Color c = s.getColor();
+		if (currentPBucketMode==PBMode.NOT_CONTIG){
+			oldColorSquares = sqCanvas.findAllOfColor(c);
+		}
+		else {  //(currentPBucketMode==PBMode.CONTIG)
+			oldColorSquares = sqCanvas.findAllContigOfColor(s, c, new ArrayList<Square>());
+		}
+		for (Square si : oldColorSquares){
+			toStack.add(new Square(si));
+			sqCanvas.findAndChange(si.getCol(), si.getRow(), currentColor);
+		}
+		canvasPanel.repaint();
+		return toStack;
+	}
+	
+	public static void export(){
+		//TODO
+	}
+
+	public static void useEyedropper(int x, int y){
+		Square s = sqCanvas.find(x, y);
+		currentColor = s.getColor();
+		toolbarPanel.changeCCPanel();
+		
 	}
 }

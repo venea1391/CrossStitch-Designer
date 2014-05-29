@@ -27,12 +27,24 @@ public class BackStitchPanel extends JPanel {
 								// we enter backstitch mode
 	private Stack<Line> eraseStack = new Stack<Line>();
 	private Stack<Square> squareStack = new Stack<Square>();
-	private Point lastPoint;
+	private Stack<ArrayList<Square>> pbStack = new Stack<ArrayList<Square>>();
 	
 	private Action undoAction = new AbstractAction()
     {
         @Override
         public void actionPerformed(ActionEvent ae) {  undo();  }
+    };
+    private Action zoomInAction = new AbstractAction()
+    {
+        @Override
+        public void actionPerformed(ActionEvent ae) {  
+        	Controller.zoomIn();  }
+    };
+    private Action zoomOutAction = new AbstractAction()
+    {
+        @Override
+        public void actionPerformed(ActionEvent ae) {  
+        	Controller.zoomOut();  }
     };
     
 	public BackStitchPanel(){
@@ -47,17 +59,28 @@ public class BackStitchPanel extends JPanel {
                 "undo");
 		getActionMap().put("undo",
                  undoAction);
+		getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke((char) KeyEvent.VK_EQUALS),
+                "zoomin");
+		getActionMap().put("zoomin",
+                 zoomInAction);
+		getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke((char) KeyEvent.VK_MINUS),
+                "zoomout");
+		getActionMap().put("zoomout",
+                 zoomOutAction);
 		addMouseListener(new MouseListener() {
 	        @Override
 	        public void mousePressed(MouseEvent e) {
 	            System.out.println("mouse pressed");
 	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
-	            		(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.EBS)){
+	            		(Controller.getMode()==Controller.Mode.ERASE && 
+	            		Controller.currentEraserMode==Controller.EMode.EBS)){
 	            	startPoint = new Point(approximate(e.getX()), approximate(e.getY()));
 	            }
 	            else if ((Controller.getMode()==Controller.Mode.PAINT) ||
-		            	(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.ESQ)){
-	            	Square oldSq = Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+		            	(Controller.getMode()==Controller.Mode.ERASE && 
+		            	Controller.currentEraserMode==Controller.EMode.ESQ)){
+	            	Square oldSq = Controller.paint(paintApproximate(e.getX()), 
+	            			paintApproximate(e.getY()));
 	            	if (!squareStack.contains(oldSq)) {squareStack.push(oldSq);}
 	            }
 	        }
@@ -65,7 +88,8 @@ public class BackStitchPanel extends JPanel {
 	        public void mouseReleased(MouseEvent e) {
 	            System.out.println("mouse released");
 	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
-	            	(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.EBS)){
+	            	(Controller.getMode()==Controller.Mode.ERASE && 
+	            	Controller.currentEraserMode==Controller.EMode.EBS)){
 	            	endPoint = new Point(approximate(e.getX()), approximate(e.getY()));
 	            	
 	            	ArrayList<Line> segments = breakupLine(startPoint, endPoint);
@@ -109,10 +133,22 @@ public class BackStitchPanel extends JPanel {
 	            	}
 	            }
 	            else if ((Controller.getMode()==Controller.Mode.PAINT) ||
-		            	(Controller.getMode()==Controller.Mode.ERASE && Controller.currentEraserMode==Controller.EMode.ESQ)){
-	            	Square oldSq = Controller.paint(paintApproximate(e.getX()), paintApproximate(e.getY()));
+		            	(Controller.getMode()==Controller.Mode.ERASE && 
+		            	Controller.currentEraserMode==Controller.EMode.ESQ)){
+	            	Square oldSq = Controller.paint(paintApproximate(e.getX()),
+	            			paintApproximate(e.getY()));
 	            	if (!squareStack.contains(oldSq)) {squareStack.push(oldSq);}
-		            }
+		        }
+	            else if (Controller.getMode()==Controller.Mode.PBUCKET){
+	            	ArrayList<Square> oldSquares = Controller.paintBucket(paintApproximate(e.getX()),
+	            			paintApproximate(e.getY()));
+	            	pbStack.push(oldSquares);
+		        }
+	            else if (Controller.getMode()==Controller.Mode.EYEDROPPER){
+	            	Controller.useEyedropper(paintApproximate(e.getX()),
+	            			paintApproximate(e.getY()));
+
+		        }
 	        }
 	        @Override
 	        public void mouseClicked(MouseEvent e) {}
@@ -368,6 +404,9 @@ public class BackStitchPanel extends JPanel {
 	public void resetSquareStack(){
 		squareStack.clear();
 	}
+	public void resetPBStack(){
+		pbStack.clear();
+	}
 	
 	public void undo(){
 		
@@ -401,6 +440,17 @@ public class BackStitchPanel extends JPanel {
 		}
 		else if (Controller.getMode() == Controller.Mode.ERASE){
 			//TODO ?
+		}
+		else if (Controller.getMode() == Controller.Mode.PBUCKET){
+			if (pbStack.size()==0){
+				return;
+			}
+			ArrayList<Square> sList = pbStack.peek();
+			for (Square s : sList){
+				Controller.paint(s.getCol(), s.getRow(), s.getColor());
+			}
+			repaint();
+			pbStack.pop();
 		}
 	}
 	

@@ -15,15 +15,17 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class ToolbarPanel extends JPanel implements KeyListener {
-	public static final int ICON_NUM = 11;
+	public static final int ICON_NUM = 13;
 	public static final int IMAGE_SIZE = 32;
 	private BufferedImage icons_img;
 	private IconJButton _backstitch, _brush, _eraser, _new, _open, _paint_bucket, _palette,
-				_pattern, _save, _zoom_in, _zoom_out;
+				_pattern, _save, _zoom_in, _zoom_out, _export, _eyedropper;
 	private IconJButton[] icon_buttons = new IconJButton[ICON_NUM];
 	private JLabel statusLabel;
-	private JPanel eraseType;
+	private JPanel options;
+	private CCPanel ccPanel;
 	private JRadioButton eraseBS, eraseSQ;
+	private JCheckBox contiguousCB;
 
 	public ToolbarPanel() {
 		try {
@@ -44,8 +46,24 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		_save = new IconJButton (icons_img.getSubimage(0, IMAGE_SIZE*8, IMAGE_SIZE*4, IMAGE_SIZE), iconType.SAVE); //save
 		_zoom_in = new IconJButton(icons_img.getSubimage(0, IMAGE_SIZE*9, IMAGE_SIZE*4, IMAGE_SIZE), iconType.ZOOM_IN); //zoom_in
 		_zoom_out = new IconJButton(icons_img.getSubimage(0, IMAGE_SIZE*10, IMAGE_SIZE*4, IMAGE_SIZE), iconType.ZOOM_OUT); //zoom_out
+		_export = new IconJButton(icons_img.getSubimage(0, IMAGE_SIZE*11, IMAGE_SIZE*4, IMAGE_SIZE), iconType.EXPORT); //export
+		_eyedropper = new IconJButton(icons_img.getSubimage(0, IMAGE_SIZE*12, IMAGE_SIZE*4, IMAGE_SIZE), iconType.EYEDROPPER); //eyedropper
 		
-		
+		_export.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.export();
+		    	Controller.changedMode = false;
+		    }
+		});
+		_eyedropper.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.Mode oldMode = Controller.getMode();
+		    	Controller.setMode(Controller.Mode.EYEDROPPER);
+		    	changeSelectedIcon(oldMode);
+		    	showEraseType(false);
+		    	showPBucketType(false);
+		    	Controller.changedMode = true;}
+		});
 		_zoom_in.addActionListener(new ActionListener(){
 		    public void actionPerformed(ActionEvent evt){
 		    	Controller.zoomIn();
@@ -64,6 +82,7 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		    	Controller.setMode(Controller.Mode.BACKSTITCH);
 		    	changeSelectedIcon(oldMode);
 		    	showEraseType(false);
+		    	showPBucketType(false);
 		    	Controller.changedMode = true;}
 		});
 		_eraser.addActionListener(new ActionListener(){
@@ -72,6 +91,7 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		    	Controller.setMode(Controller.Mode.ERASE);
 		    	changeSelectedIcon(oldMode);
 		    	Controller.changedMode = true;
+		    	showPBucketType(false);
 		    	if (oldMode==Controller.Mode.ERASE){
 		    		showEraseType(false);
 		    	}
@@ -85,6 +105,7 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		    	changeSelectedIcon(oldMode);
 		    	Controller.changedMode = true;
 		    	showEraseType(false);
+		    	showPBucketType(false);
 		    	}
 		});
 		_paint_bucket.addActionListener(new ActionListener(){
@@ -94,7 +115,11 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		    	changeSelectedIcon(oldMode);
 		    	Controller.changedMode = true;
 		    	showEraseType(false);
+		    	if (oldMode==Controller.Mode.PBUCKET){
+		    		showPBucketType(false);
 		    	}
+		    	else {showPBucketType(true);}
+		    }
 		});
 		_palette.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent evt){
@@ -103,17 +128,20 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 			}
 		});
 		
+		
 		icon_buttons[0] = _new;
 		icon_buttons[1] = _open;
 		icon_buttons[2] = _save;
-		icon_buttons[3] = _pattern;
-		icon_buttons[4] = _backstitch;
-		icon_buttons[5] = _brush;
-		icon_buttons[6] = _eraser;
-		icon_buttons[7] = _paint_bucket;
-		icon_buttons[8] = _palette;
-		icon_buttons[9] = _zoom_in;
-		icon_buttons[10] = _zoom_out;
+		icon_buttons[3] = _export;
+		icon_buttons[4] = _pattern;
+		icon_buttons[5] = _backstitch;
+		icon_buttons[6] = _brush;
+		icon_buttons[7] = _eraser;
+		icon_buttons[8] = _paint_bucket;
+		icon_buttons[9] = _eyedropper;
+		icon_buttons[10] = _palette;
+		icon_buttons[11] = _zoom_in;
+		icon_buttons[12] = _zoom_out;
 		
 		setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -122,14 +150,28 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		c.ipady = 0;
 		c.gridx = 0;
 		c.gridy = 0;
+		c.anchor = GridBagConstraints.WEST;
 		for(int i=0 ; i<ICON_NUM ; i++){
 			c.gridx = i;
 	        add(icon_buttons[i], c);
-	    }		
+	    }	
+		c.gridx = ICON_NUM;
+		ccPanel = new CCPanel(Color.black);
+		add(ccPanel, c);
 		
-		eraseType = new JPanel();
-		eraseType.setBackground(Color.white);
-		eraseType.setPreferredSize(new Dimension(800-(11*IMAGE_SIZE), 32));
+		options = new JPanel();
+		options.setLayout(new GridBagLayout());
+		GridBagConstraints cOptions = new GridBagConstraints();
+		cOptions.insets = new Insets(0,0,0,0);
+		cOptions.ipadx = 0;
+		cOptions.ipady = 0;
+		cOptions.gridx = 0;
+		cOptions.gridy = 0;
+		cOptions.fill = GridBagConstraints.HORIZONTAL;
+		cOptions.anchor = GridBagConstraints.WEST;  // y u no work
+		options.setBackground(Color.white);
+		options.setPreferredSize(new Dimension(800-((ICON_NUM+1)*IMAGE_SIZE), 32));
+		
 		eraseBS = new JRadioButton("Erase Backstitch");
 		eraseBS.setSelected(true);
 	    eraseSQ = new JRadioButton("Erase Square");
@@ -137,26 +179,38 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 	    typeGroup.add(eraseBS);
 	    typeGroup.add(eraseSQ);
 	    eraseBS.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.currentEraserMode = Controller.EMode.EBS;}
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.currentEraserMode = Controller.EMode.EBS;}
 		});
 	    eraseSQ.addActionListener(new ActionListener(){
-		    public void actionPerformed(ActionEvent evt){Controller.currentEraserMode = Controller.EMode.ESQ;}
+		    public void actionPerformed(ActionEvent evt){
+		    	Controller.currentEraserMode = Controller.EMode.ESQ;}
 		});
-	    eraseType.add(eraseBS);
-	    eraseType.add(eraseSQ);
+	    //options.add(ccPanel, cOptions);
+	    cOptions.gridx = 0;
+	    options.add(eraseBS, cOptions);
+	    cOptions.gridx = 1;
+	    options.add(eraseSQ, cOptions);
+	    contiguousCB = new JCheckBox("Contiguous");
+	    contiguousCB.addActionListener(new ActionListener(){
+		    public void actionPerformed(ActionEvent evt){
+		    	if (((AbstractButton) evt.getSource()).isSelected()){
+		    		Controller.currentPBucketMode = Controller.PBMode.CONTIG;
+		    	}
+		    	else {Controller.currentPBucketMode = Controller.PBMode.NOT_CONTIG;}
+		    }	
+		});
+	    cOptions.gridx = 2;
+	    options.add(contiguousCB, cOptions);
 	    
-		//type.
-		JPanel status = new JPanel();
-		status.setPreferredSize(new Dimension(800-(11*IMAGE_SIZE), 32));
-		status.setBackground(Color.white);
-		statusLabel = new JLabel();
-		status.add(statusLabel);
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 11;
+		
+		//c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = ICON_NUM;
 		//add(status, c);
 		//c.gridx = 12;
-		add(eraseType, c);
+		add(options, c);
 		showEraseType(false);
+		showPBucketType(false);
 		
 		setSize(800, 32);
 		setBackground(Color.white);
@@ -178,11 +232,6 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 	    }	
 	}
 	
-	public void changeStatus(String s){
-		statusLabel.setText(s);
-		
-	}
-	
 	public void changeSelectedIcon(Controller.Mode m){
 		if (m==Controller.Mode.BACKSTITCH){
 			_backstitch.enableImage();
@@ -194,7 +243,10 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 			_brush.enableImage();
 		}
 		else if (m==Controller.Mode.PBUCKET){
-			_brush.enableImage();
+			_paint_bucket.enableImage();
+		}
+		else if (m==Controller.Mode.EYEDROPPER){
+			_eyedropper.enableImage();
 		}
 		
 		switch (Controller.getMode()){
@@ -210,6 +262,9 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 			case PBUCKET:
 				_paint_bucket.select();
 				break;
+			case EYEDROPPER:
+				_eyedropper.select();
+				break;
 			default:
 				break;
 		}
@@ -224,5 +279,18 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 			eraseBS.setVisible(false);
 			eraseSQ.setVisible(false);
 		}
+	}
+	
+	public void showPBucketType(boolean b){
+		if (b){
+			contiguousCB.setVisible(true);
+		}
+		else {
+			contiguousCB.setVisible(false);
+		}
+	}
+	
+	public void changeCCPanel(){
+		ccPanel.changeColor(Controller.currentColor);
 	}
 }

@@ -34,7 +34,7 @@ public class IconJButton extends JButton {
             }
             public void mouseExited(MouseEvent evt) {
             	if (status==statusType.DISABLED){
-            		disable();
+            		setEnabled(false);
             	}
             	else if(status==statusType.ENABLED){
             		enableImage();
@@ -48,11 +48,9 @@ public class IconJButton extends JButton {
             	select();
             }
             public void mouseReleased(MouseEvent evt) {
-            	//enableImage();
-            	Controller.Mode m = Controller.getMode();
             	if (Controller.changedMode==true){
             		if (status==statusType.DISABLED){
-                		disable();
+            			setEnabled(false);
                 	}
                 	else if(status==statusType.ENABLED){
                 		enableImage();
@@ -63,7 +61,7 @@ public class IconJButton extends JButton {
             	}
             	else {
 	            	if (status==statusType.DISABLED){
-	            		disable();
+	            		setEnabled(false);
 	            	}
 	            	else {
 	            		enableImage();
@@ -74,10 +72,7 @@ public class IconJButton extends JButton {
 		
 	}
 	
-	public void disable(){
-		setIcon(disabled);
-		status = statusType.DISABLED;
-	}
+
 	public void enableImage(){
 		setIcon(enabled);
 		status = statusType.ENABLED;
@@ -88,6 +83,7 @@ public class IconJButton extends JButton {
 			status = statusType.ENABLED;
 		}
 		else {
+			setIcon(disabled);
 			status = statusType.DISABLED;
 		}
 	}
