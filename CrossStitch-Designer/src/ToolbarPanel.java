@@ -1,32 +1,39 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+/**
+ * Contains all icons for actions, options related to actions, and current
+ * status (of current color)
+ * 
+ * @author Venea
+ *
+ */
 @SuppressWarnings("serial")
-public class ToolbarPanel extends JPanel implements KeyListener {
+public class ToolbarPanel extends JPanel {
 	public static final int ICON_NUM = 13;
 	public static final int IMAGE_SIZE = 32;
 	private BufferedImage icons_img;
 	private IconJButton _backstitch, _brush, _eraser, _new, _open, _paint_bucket, _palette,
 				_pattern, _save, _zoom_in, _zoom_out, _export, _eyedropper;
 	private IconJButton[] icon_buttons = new IconJButton[ICON_NUM];
-	private JLabel statusLabel;
 	private JPanel options;
 	private CCPanel ccPanel;
 	private JRadioButton eraseBS, eraseSQ;
 	private JCheckBox contiguousCB;
 
+	/**
+	 * Grabs the file of all the icon images, creates each icon as an IconJButton.
+	 * ActionListener added to each iconjbutton, iconjbuttons added to an array
+	 * Panel created with GridBagLayout with a panel for currentColor, paintbucket
+	 * checkbox option, and eraser radio button options
+	 */
 	public ToolbarPanel() {
 		try {
 			icons_img = ImageIO.read(new File("icons/all_icons.png"));
@@ -34,7 +41,7 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 			e.printStackTrace();
 			return;
 		}
-		addKeyListener(this);
+
 		_backstitch = new IconJButton(icons_img.getSubimage(0, 0, IMAGE_SIZE*4, IMAGE_SIZE), iconType.BACKSTITCH); //backstitch
 		_brush = new IconJButton(icons_img.getSubimage(0, IMAGE_SIZE*1, IMAGE_SIZE*4, IMAGE_SIZE), iconType.BRUSH); //brush
 		_eraser = new IconJButton (icons_img.getSubimage(0, IMAGE_SIZE*2, IMAGE_SIZE*4, IMAGE_SIZE), iconType.ERASER); //eraser
@@ -216,22 +223,21 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		setBackground(Color.white);
 		
 	}
-	
-	public void keyPressed(KeyEvent ke) {  
-        if (ke.getKeyCode() == KeyEvent.VK_Z) { 
-        	//undo(); 
-        	}  
-    }  
-    
-    public void keyReleased(KeyEvent ke) {} 
-    public void keyTyped(KeyEvent e) {}
 
+	/**
+	 * Loops through the array of iconjbuttons and enables each one
+	 */
 	public void enableAllIcons(){
 		for(int i=0 ; i<ICON_NUM; i++){
 	        icon_buttons[i].setEnabled(true);
 	    }	
 	}
 	
+	/**
+	 * Sets the old mode related button to enabled (clearing any selected status)
+	 * Sets the new mode related button to selected
+	 * @param m Old Mode
+	 */
 	public void changeSelectedIcon(Controller.Mode m){
 		if (m==Controller.Mode.BACKSTITCH){
 			_backstitch.enableImage();
@@ -270,6 +276,10 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		}
 	}
 	
+	/**
+	 * Shows/hides the eraser options 
+	 * @param b Boolean to show or not show
+	 */
 	public void showEraseType(boolean b){
 		if (b){
 			eraseBS.setVisible(true);
@@ -281,6 +291,10 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		}
 	}
 	
+	/**
+	 * Shows/Hides the pbucket contiguous checkbox
+	 * @param b Boolean to show or not show
+	 */
 	public void showPBucketType(boolean b){
 		if (b){
 			contiguousCB.setVisible(true);
@@ -290,6 +304,9 @@ public class ToolbarPanel extends JPanel implements KeyListener {
 		}
 	}
 	
+	/**
+	 * Updates the color of the ccPanel to Controller.currentColor
+	 */
 	public void changeCCPanel(){
 		ccPanel.changeColor(Controller.currentColor);
 	}

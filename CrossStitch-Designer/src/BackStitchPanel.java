@@ -7,9 +7,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
@@ -17,6 +15,11 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.*;
 
+/**
+ * The top "layer" of the design area. All mouse events are detected here.
+ *  
+ * @author Venea
+ */
 @SuppressWarnings("serial")
 public class BackStitchPanel extends JPanel {
 	private Point startPoint, endPoint;
@@ -47,9 +50,15 @@ public class BackStitchPanel extends JPanel {
         	Controller.zoomOut();  }
     };
     
+	/**
+	 * Constructs a new BackStitchPanel. 
+	 * Creates key bindings for undo (z), zoom in (=), and zoom out (-)
+	 * MouseListener detects all mouse events and performs actions depending on 
+	 * the current/new mode.
+	 */
 	public BackStitchPanel(){
 		setOpaque(false);
-		System.out.println("constructing bsPanel");
+		//System.out.println("constructing bsPanel");
 		setSize(800, 600);
 		
 		mouseMovedEventHandler handler = new mouseMovedEventHandler();
@@ -70,7 +79,7 @@ public class BackStitchPanel extends JPanel {
 		addMouseListener(new MouseListener() {
 	        @Override
 	        public void mousePressed(MouseEvent e) {
-	            System.out.println("mouse pressed");
+	            
 	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
 	            		(Controller.getMode()==Controller.Mode.ERASE && 
 	            		Controller.currentEraserMode==Controller.EMode.EBS)){
@@ -86,7 +95,7 @@ public class BackStitchPanel extends JPanel {
 	        }
 	        @Override
 	        public void mouseReleased(MouseEvent e) {
-	            System.out.println("mouse released");
+	            
 	            if ((Controller.getMode()==Controller.Mode.BACKSTITCH) ||
 	            	(Controller.getMode()==Controller.Mode.ERASE && 
 	            	Controller.currentEraserMode==Controller.EMode.EBS)){
@@ -160,22 +169,31 @@ public class BackStitchPanel extends JPanel {
 		
 	}
 
+	
     public Dimension getPreferredSize() {
         return new Dimension(Controller.getWidth()*Square.EDGE, 
         		Controller.getHeight()*Square.EDGE);
     }
     
     
+	/**
+	 * Draws the BufferedImage that contains the backstitch lines.
+	 * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+	 */
 	public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        System.out.println("painting backstitch layer");
+        //System.out.println("painting backstitch layer");
         Graphics2D g2d = (Graphics2D) g;
 		if (img!=null) {
-			System.out.println(img.getWidth());
+			
 			g2d.drawImage(img, 0, 0, null);
 		}
     } 
 	
+	/**
+	 * @param d The value of the mouse's x or y position
+	 * @return The closest grid line, rounded up or down
+	 */
 	public int approximate(double d){
 		int i = (int) (d/Square.EDGE);
 		if (d%Square.EDGE > Square.EDGE/2){
@@ -184,15 +202,26 @@ public class BackStitchPanel extends JPanel {
 		return i;
 	}
 	
+	/**
+	 * @param d The value of the mouse's x or y position
+	 * @return The x or y of the Square containing d
+	 */
 	public int paintApproximate(double d){
 		return (int) (d/Square.EDGE);
 	}
 	
+	/**
+	 * Creates the Buffered Image.
+	 */
 	public void createBI(){
 		img = new BufferedImage(Controller.getWidth()*Square.EDGE, 
 				Controller.getHeight()*Square.EDGE, BufferedImage.TYPE_INT_ARGB);
 		big = img.createGraphics();
 	}
+	
+	/**
+	 * Updates the Buffered Image 'img' based on the Square.EDGE value
+	 */
 	public void scaleBI(){
 		BufferedImage newImg = new BufferedImage(Controller.getWidth()*Square.EDGE, 
 				Controller.getHeight()*Square.EDGE, BufferedImage.TYPE_INT_ARGB);
@@ -211,6 +240,23 @@ public class BackStitchPanel extends JPanel {
 		big = grr;
 	}
 	
+	/**
+	 * To be able to store, scale, and modify the backstitch lines, they must be
+	 * broken up into their smallest units.
+	 * Options: 
+	 * 	Point (0, 0) to (0, 0)
+	 * 	Horizontal (0, 0) to (1, 0)
+	 * 	Vertical (0, 0) to (0, 1)
+	 * 	1x1 Diagonal (0, 0) to (1, 1)
+	 * 	1x2 Diagonal (0, 0) to (1, 2)
+	 *  2x1 Diagonal (0, 0) to (2, 1)
+	 *  There are 17 possibilities ( (0,0)to(1,1) is distinct from (1,1)to(0,0) )
+	 *  All angles are accounted for in the diagonals.
+	 *  
+	 * @param start The starting point of the entire line
+	 * @param end The ending point of the entire line
+	 * @return A list of all the line segments that make up the line from start to end
+	 */
 	public ArrayList<Line> breakupLine(Point start, Point end){
 		ArrayList<Line> segments = new ArrayList<Line>();
 		int spanX, spanY, x1, y1, x2, y2;
@@ -387,6 +433,8 @@ public class BackStitchPanel extends JPanel {
 
 			}
 		}
+		//If a line does not match any of the above cases, it is not recognized
+		//and ignored.
 		else {
 			System.out.println("not a recognized line");
 			return segments;
@@ -408,6 +456,13 @@ public class BackStitchPanel extends JPanel {
 		pbStack.clear();
 	}
 	
+	/**
+	 * Depending on mode, undo undos the last action. 
+	 * Backstitch: the last segment of the last full line
+	 * Paint: the last square changed
+	 * Erase: not done
+	 * Paint Bucket: the entire paint bucket action, not just square by square
+	 */
 	public void undo(){
 		
 		if (Controller.getMode() == Controller.Mode.BACKSTITCH){
@@ -455,6 +510,11 @@ public class BackStitchPanel extends JPanel {
 	}
 	
 	
+	/**
+	 * Inner class to handle the mouseDragged event to change squares as the mouse moves
+	 * instead of upon release.
+	 *
+	 */
 	class mouseMovedEventHandler extends MouseMotionAdapter {           
 	    @Override
 	    public void mouseDragged(MouseEvent e)

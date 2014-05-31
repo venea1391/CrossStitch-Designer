@@ -1,14 +1,8 @@
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.event.ComponentEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -19,10 +13,17 @@ import javax.swing.JColorChooser;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 
+/**
+ * The static class that acts something like a controller in an MVC pattern.
+ * Starts the program with displaying all of the panels, contains logic that takes
+ * inputs from the panels and sends messages or data to other models or views.
+ * 
+ * @author Venea
+ *
+ */
 public class Controller {
 	private static int height, width;
 	private static CanvasPanel canvasPanel;
@@ -43,9 +44,15 @@ public class Controller {
 	//custom path
 	static final JFileChooser fc = new JFileChooser("/Volumes/Macintosh HDD/HDD desktop/crafts/cross stitch");
 	
+	/**
+	 * @param h The number of squares in the design's height
+	 */
 	public static void setHeight(int h){
 		height = h;
 	}
+	/**
+	 * @param w The number of squares in the design's width
+	 */
 	public static void setWidth(int w){
 		width = w;
 	}
@@ -80,6 +87,14 @@ public class Controller {
 		designArea = da;
 	}
 	
+	/**
+	 * Takes in the new Mode - if the new mode equals the current mode, currentMode changes to 
+	 * NONE. Otherwise currentMode is set to the new Mode.
+	 * When Modes are entered that involve undo operations, the stacks are reset
+	 * to prevent complexity of actions from different Modes affecting the same squares.
+	 * 
+	 * @param m The new Mode
+	 */
 	public static void setMode(Mode m){
 		if (m==Mode.BACKSTITCH){
 			if (currentMode==Mode.BACKSTITCH){
@@ -129,6 +144,7 @@ public class Controller {
 			currentMode = m;
 		}
 	}
+	
 	public static Mode getMode(){
 		return currentMode;
 	}
@@ -137,6 +153,11 @@ public class Controller {
 		return sqCanvas;
 	}
 	
+	
+	/**
+	 * Forces the panels to recognize their new size to accommodate positioning
+	 * and scrolling.
+	 */
 	public static void updateDesignArea(){
 		//canvasPanel.repaint();
 		canvasPanel.setSize(new Dimension(width*Square.EDGE, height*Square.EDGE));
@@ -149,6 +170,10 @@ public class Controller {
 		bsPanel.repaint();
 	}
 	
+	/**
+	 * Creates the main Frame for the program and initializes all the panels.
+	 * Uses the annoying GridBagLayout.
+	 */
 	public static void start(){
         
 		JFrame frame = new JFrame("CrossStitch Designer");
@@ -197,9 +222,19 @@ public class Controller {
 		
 	}
 	
+	/**
+	 * Tells the toolbarPanel to enable the icons.
+	 */
 	public static void enableToolbar(){
 		toolbarPanel.enableAllIcons();
 	}
+	
+	/**
+	 * Creates a new canvas from the "enter dimensions" dialog.
+	 * 
+	 * @param h The height of the canvas
+	 * @param w The width of the canvas
+	 */
 	public static void initializeSquareCanvas(int h, int w){
 		setHeight(h);
 		setWidth(w);
@@ -212,6 +247,14 @@ public class Controller {
 		
 	}
 	
+	
+	/**
+	 * Displays the file chooser to select an image to import.
+	 * Creates a new canvas from the image. 
+	 * Image size is limited due to memory space.
+	 * 
+	 * @param parent The JFrame parent to contain the dialog
+	 */
 	public static void importImage(JFrame parent){
 		int returnVal = fc.showOpenDialog(parent);
 		//TODO add file filter to file chooser
@@ -237,6 +280,12 @@ public class Controller {
         }
 	}
 	
+	
+	/**
+	 * Makes the Canvas larger. If edge is 2, increases to 5.
+	 * Until it reaches 40, it increases by 5.
+	 * 40 is the limit.
+	 */
 	public static void zoomIn(){
 		if (Square.EDGE == 2){
 			Square.EDGE = 5;
@@ -256,6 +305,12 @@ public class Controller {
 			//do nothing
 		}
 	}
+	
+	/**
+	 * Makes the Canvas smaller. If edge is 2, increases to 5.
+	 * Until it reaches 5, it decreases by 5.
+	 * At 5 it decreases to 2, which is the limit.
+	 */
 	public static void zoomOut(){
 		if (Square.EDGE > 5){
 			Square.EDGE = Square.EDGE-5;
@@ -276,6 +331,12 @@ public class Controller {
 		}
 	}
 	
+	
+	/**
+	 * Opens the color chooser dialog.
+	 * Sets the currentColor to the chosen color
+	 * Updates the ccPanel to display new color
+	 */
 	public static void chooseColor(){
 		currentColor = JColorChooser.showDialog(designArea, "Choose a color", currentColor);
 		toolbarPanel.changeCCPanel();
@@ -283,6 +344,16 @@ public class Controller {
 
 	}
 	
+	
+	/**
+	 * Changes the color of the square at the given coordinates.
+	 * In ERASE mode the color is changed to null, otherwise it is changed to
+	 * currentColor.
+	 * 
+	 * @param x X of the square
+	 * @param y Y of the square
+	 * @return A copy of the old Square
+	 */
 	public static Square paint(int x, int y){
 		Square i;
 		if ((x>=width*Square.EDGE) || (y>=height*Square.EDGE)){
@@ -300,6 +371,15 @@ public class Controller {
 		return i;
 	}
 	
+	/**
+	 * Here color is specified for instances when squares are to be colored 
+	 * something other than currentColor, such as when undoing an action.
+	 * 
+	 * @param x X of the Square
+	 * @param y Y of the Square
+	 * @param c The color to change the square to
+	 * @return A copy of the old Square
+	 */
 	public static Square paint(int x, int y, Color c){
 		Square i;
 		if ((x>=width*Square.EDGE) || (y>=height*Square.EDGE)){
@@ -312,6 +392,14 @@ public class Controller {
 		return i;
 	}
 	
+	/**
+	 * Finds either contiguous or all non-contiguous squares of the same color
+	 * and changes them to currentColor.
+	 * 
+	 * @param x X of square
+	 * @param y Y of square
+	 * @return A list of copies of the old squares that were changed.
+	 */
 	public static ArrayList<Square> paintBucket(int x, int y){
 		ArrayList<Square> oldColorSquares = new ArrayList<Square>();
 		ArrayList<Square> toStack = new ArrayList<Square>();
@@ -335,10 +423,16 @@ public class Controller {
 		//TODO
 	}
 
+	/**
+	 * Gets the color of the square at the coordinates and makes it the currentColor.
+	 * Also updates the ccPanel to match.
+	 * 
+	 * @param x X of the square
+	 * @param y Y of the square
+	 */
 	public static void useEyedropper(int x, int y){
 		Square s = sqCanvas.find(x, y);
 		currentColor = s.getColor();
 		toolbarPanel.changeCCPanel();
-		
 	}
 }

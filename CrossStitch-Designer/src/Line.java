@@ -1,9 +1,21 @@
 import java.awt.Color;
 import java.awt.Point;
 
+/**
+ * Defines a line consisting of a start point, end point, and color.
+ * 
+ * @author Venea
+ *
+ */
 public class Line {
 	private Point p1, p2;
 	private Color color;
+	
+	/**
+	 * @param p1 Start point
+	 * @param p2 End point
+	 * @param c Color of line
+	 */
 	public Line(Point p1, Point p2, Color c){
 		this.p1 = p1;
 		this.p2 = p2;
@@ -31,6 +43,12 @@ public class Line {
 		return result;
 	}
 
+	/**
+	 * Does not include color so that squares of different colors but occupying
+	 * the same space are counted as the same.
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

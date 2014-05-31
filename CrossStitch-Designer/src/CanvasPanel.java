@@ -1,26 +1,23 @@
 import javax.swing.JPanel;
-import javax.swing.BorderFactory;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Point;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Stack;
 
+
+/**
+ * CanvasPanel is in charge of drawing the SquareCanvas.
+ * Cannot detect mouse events because it is hidden by the BackStitchPanel.
+ * 
+ * @author Venea
+ */
+@SuppressWarnings("serial")
 public class CanvasPanel extends JPanel {
-	private ArrayList<Square> recentSquares = new ArrayList<Square>();
-	private Stack<Square> paintStack = new Stack<Square>();
-	private Stack<Square> eraseStack = new Stack<Square>();
 	
 	public CanvasPanel(){
 		setSize(800, 600);
 		
-		addMouseListener(new MouseListener() {
+		/*addMouseListener(new MouseListener() {
 	        @Override
 	        public void mousePressed(MouseEvent e) {
 	            System.out.println("sefjrgfv");
@@ -40,7 +37,7 @@ public class CanvasPanel extends JPanel {
 	        public void mouseExited(MouseEvent e) {}
 	        @Override
 	        public void mouseEntered(MouseEvent e) {}
-	    });
+	    });*/
 	}
 	
 	@Override
@@ -49,16 +46,17 @@ public class CanvasPanel extends JPanel {
     }
 
 
+    /**
+     * Obtains the SquareCanvas from Controller, loops through all squares
+     * and draws them to the panel.
+     * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+     */
     public void paintComponent(Graphics g) {
     	super.paintComponent(g); 
-    	System.out.println("trying to paint canvas");
     	SquareCanvas sc = Controller.getSquareCanvas();
     	if (sc!=null){
 	    	HashMap<Integer, HashMap<Integer, Square>> canvas = sc.getCanvas();
-	    	System.out.println("painting canvas panel");
-	              
-	        // Draw Text
-	        //g.drawString("This is my custom Panel!",10,20);
+
 	        if (sc!=null){
 	        	for(int i=0; i<canvas.size(); i++){
 	        		HashMap<Integer, Square> row = canvas.get(i);
@@ -70,18 +68,6 @@ public class CanvasPanel extends JPanel {
 	        }
     	}
     }  
-
-
-	public int approximate(double d){
-		int i = (int) (d/Square.EDGE);
-		if (d%Square.EDGE > Square.EDGE/2){
-			i++;
-		}
-		return i;
-	}
     
-    public void resetPaintStack(){
-    	paintStack.clear();
-    }
 }
 

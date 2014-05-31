@@ -6,6 +6,12 @@ import java.awt.image.BufferedImage;
 import javax.swing.*;
 
 	
+/**
+ * Specifies how an action icon works in the toolbar.
+ * 
+ * @author Venea
+ *
+ */
 @SuppressWarnings("serial")
 public class IconJButton extends JButton {
 	public static final int IMAGE_SIZE = 32;
@@ -15,6 +21,13 @@ public class IconJButton extends JButton {
 	private enum statusType {DISABLED, ENABLED, HIGHLIGHTED, SELECTED};
 	private statusType status;
 	
+	/**
+	 * Constructs a button initially set to disabled, defines actions based
+	 * on mouse events.
+	 * 
+	 * @param img BufferedImage of the 4 different states of the icon
+	 * @param type The iconType of the image
+	 */
 	public IconJButton(BufferedImage img, iconType type){
 		this.type = type;
 		this.disabled = new ImageIcon(img
@@ -73,10 +86,18 @@ public class IconJButton extends JButton {
 	}
 	
 
+	/**
+	 * Updates the icon image, sets status to enabled
+	 */
 	public void enableImage(){
 		setIcon(enabled);
 		status = statusType.ENABLED;
 	}
+	
+	/**
+	 * Updates the icon image, sets status to enabled or disabled.
+	 * @see javax.swing.AbstractButton#setEnabled(boolean)
+	 */
 	public void setEnabled(boolean b){
 		if (b){
 			setIcon(enabled);
@@ -87,9 +108,18 @@ public class IconJButton extends JButton {
 			status = statusType.DISABLED;
 		}
 	}
+	
+	
+	/**
+	 * Updates image of icon.
+	 */
 	public void highlight(){
 		setIcon(highlighted);
 	}
+	
+	/**
+	 * Updates image of icon and changes status to selected.
+	 */
 	public void select(){
 		setIcon(selected);
 		status = statusType.SELECTED;

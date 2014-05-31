@@ -1,25 +1,29 @@
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowListener;
-import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+/**
+ * Dialog displays the initial options a user has when the program starts.
+ * 'Import image' or 'enter dimensions'. Will add 'load from file'
+ * 
+ * @author Venea
+ *
+ */
 @SuppressWarnings("serial")
 public class StartOptionsDialog extends JDialog implements ActionListener {
 	JButton button1, button2;
 	JFrame parent;
 	
+	/**
+	 * Constructor creates dialog and adds the two buttons.
+	 * @param parent JFrame the dialog belongs to
+	 */
 	public StartOptionsDialog(JFrame parent) {
 		super(parent, "Get started", true);
 		this.parent = parent;
@@ -38,18 +42,21 @@ public class StartOptionsDialog extends JDialog implements ActionListener {
 		setVisible(true);
 		return;
 	}
+	
+	/**
+	 * Either calls import an image or opens the dimension dialog.
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
 	public void actionPerformed(ActionEvent e) {
 		setVisible(false);
 		dispose();
 		
 		if (e.getSource()==button1) {
-			//TODO
-			//Create a file chooser
 			Controller.importImage(parent);
 			
 		}
 		if (e.getSource()==button2) {
-			JDialog dimsDialog = new DimsDialog(parent);
+			new DimsDialog(parent);
 		}
 	}
 }

@@ -1,14 +1,10 @@
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -16,6 +12,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+/**
+ * Dialog panel to get user input for dimensions of a new blank canvas.
+ * 
+ * @author Venea
+ *
+ */
 @SuppressWarnings("serial")
 public class DimsDialog extends JDialog implements ActionListener {
 	JButton ok;
@@ -25,12 +27,7 @@ public class DimsDialog extends JDialog implements ActionListener {
 	public DimsDialog(JFrame parent) {
 		super(parent, "Enter Dimensions:", true);
 		this.parent = parent;
-		/*if (parent != null) {
-			Dimension parentSize = parent.getSize(); 
-		    Point p = parent.getLocation(); 
-		    setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
-		}*/
-		
+
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -59,16 +56,23 @@ public class DimsDialog extends JDialog implements ActionListener {
 		
 		panel.add(ok, c);
 		getContentPane().add(panel);
-		//getContentPane().add(ok);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		pack(); 
 		setLocationRelativeTo(parent);
 		setVisible(true);
 		return;
 	}
+	
+	
+	/** (non-Javadoc)
+	 * Gets height and width from input fields, tells Controller to create the canvas,
+	 * tells the Controller to enable the toolbar.
+	 * 
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
 	public void actionPerformed(ActionEvent e) {
 		
-		//get input from text fields, verify
+		//get input from text fields, verify TODO
 		int h = Integer.parseInt(height.getText());
 		int w = Integer.parseInt(width.getText());
 		Controller.initializeSquareCanvas(h, w);
