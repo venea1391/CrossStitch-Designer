@@ -175,6 +175,10 @@ public class BackStitchPanel extends JPanel {
         		Controller.getHeight()*Square.EDGE);
     }
     
+    public ArrayList<Line> getLines(){
+    	return lines;
+    }
+    
     
 	/**
 	 * Draws the BufferedImage that contains the backstitch lines.

@@ -134,6 +134,12 @@ public class ToolbarPanel extends JPanel {
 				Controller.changedMode = false;
 			}
 		});
+		_pattern.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent evt){
+				Controller.makePattern();
+				Controller.changedMode = false;
+			}
+		});
 		
 		
 		icon_buttons[0] = _new;

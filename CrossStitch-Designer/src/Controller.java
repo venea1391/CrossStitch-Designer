@@ -420,7 +420,24 @@ public class Controller {
 	}
 	
 	public static void export(){
-		//TODO
+		new ChooseDialog(mainFrame);
+		
+	}
+	
+	public static void exportPixel(){
+		int returnVal = fc.showSaveDialog(mainFrame);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+		    File file = fc.getSelectedFile();
+		    Exporter.exportPixel(sqCanvas, file);
+		}
+	}
+	
+	public static void exportLines(){
+		int returnVal = fc.showSaveDialog(mainFrame);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+		    File file = fc.getSelectedFile();
+		    Exporter.exportWithLines(sqCanvas, bsPanel.getLines(), file);
+		}
 	}
 
 	/**
@@ -434,5 +451,16 @@ public class Controller {
 		Square s = sqCanvas.find(x, y);
 		currentColor = s.getColor();
 		toolbarPanel.changeCCPanel();
+	}
+	
+	public static void makePattern(){
+		PatternMaker pm = new PatternMaker();
+		int returnVal = fc.showSaveDialog(mainFrame);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+		    File file = fc.getSelectedFile();
+		    pm.createPattern(sqCanvas, bsPanel.getLines(), file);
+		    System.out.println("pattern created");
+		}
+		
 	}
 }

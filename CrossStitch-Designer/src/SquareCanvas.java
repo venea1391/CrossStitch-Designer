@@ -105,7 +105,7 @@ public class SquareCanvas {
 		for (int i=0; i<height; i++){
 			row = canvas.get(i);
 			for (int j=0; j<width; j++){
-				s = row.get(j);  //paint bucket has problem working on erased squares
+				s = row.get(j);  
 				if (s.getColor()==null){
 					if (c==null){
 						sList.add(s);
